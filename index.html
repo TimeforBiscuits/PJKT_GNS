@@ -13,9 +13,30 @@
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <title>PJKT_GNS — Cover Studio</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #121210;
+      }
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- shown until the app takes over: the two slashes, on black -->
+      <div id="boot">
+        <svg width="56" height="56" viewBox="0 0 32 32" aria-label="Loading">
+          <path d="M13 6 L7 26 M22 6 L16 26" stroke="#ff4f00" stroke-width="3.6" stroke-linecap="square" />
+        </svg>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -103,6 +103,8 @@ export interface SheetSpec {
 export interface Project {
   covers: Cover[]
   sheets: SheetSpec[]
+  /** Name for exported files (PDF and .gns); empty means a dated default. */
+  name?: string
 }
 
 let counter = 0

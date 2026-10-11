@@ -6,6 +6,21 @@ export const stamp = () => {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`
 }
 
+/** Make a typed name safe on Windows, macOS and iPadOS, without an extension. */
+export const cleanFileName = (raw: string) =>
+  raw
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\.(pdf|gns)$/i, '')
+    .replace(/^[\s.]+|[\s.]+$/g, '')
+    .slice(0, 100)
+
+/** The file's base name: the project's name, or a dated default. */
+export const baseName = (projectName: string | undefined, kind: 'covers' | 'project') =>
+  cleanFileName(projectName ?? '') || `PJKT_GNS-${kind}-${stamp()}`
+
 export interface Writable {
   createWritable: () => Promise<{ write: (d: Blob) => Promise<void>; close: () => Promise<void> }>
 }

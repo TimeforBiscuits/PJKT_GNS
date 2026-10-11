@@ -6,7 +6,6 @@ import { fileSync, fontEntry, fontSync, loadFont, loadTextFonts } from '../fonts
 import { useAssets, type Asset } from '../store/assets'
 import { useDoc } from '../store/doc'
 import { useEditor } from '../store/editor'
-import { stamp } from '../app/files'
 import { writeSheetsPdf, writeTestPagePdf, type PlacedImage, type WriterDeps } from './writer'
 
 /** iPad Safari refuses canvases over 16.7 megapixels. */
@@ -120,7 +119,7 @@ export interface BuiltPdf {
 }
 
 /** Build the print PDF for everything in the queue. */
-export async function buildCoversPdf(onProgress?: (msg: string) => void): Promise<BuiltPdf> {
+export async function buildCoversPdf(fileName: string, onProgress?: (msg: string) => void): Promise<BuiltPdf> {
   const { project } = useDoc.getState()
   const ed = useEditor.getState()
   const printer = PRINTERS[ed.printerId]
@@ -133,7 +132,7 @@ export async function buildCoversPdf(onProgress?: (msg: string) => void): Promis
   const bytes = await writeSheetsPdf(sheets, deps, {
     cutLines: ed.cutLines,
   })
-  const file = new File([bytes as BlobPart], `PJKT_GNS-covers-${stamp()}.pdf`, { type: 'application/pdf' })
+  const file = new File([bytes as BlobPart], fileName, { type: 'application/pdf' })
   return { file, sheets: sheets.reduce((n, s) => n + s.spec.copies, 0) }
 }
 
@@ -143,4 +142,3 @@ export async function buildTestPdf(): Promise<BuiltPdf> {
   return { file: new File([bytes as BlobPart], 'PJKT_GNS-printer-test.pdf', { type: 'application/pdf' }), sheets: 1 }
 }
 
-export const coverFileName = () => `PJKT_GNS-covers-${stamp()}.pdf`

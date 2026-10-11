@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { CalibrateDialog } from './app/CalibrateDialog'
+import { Splash } from './app/Splash'
 import { Inspector } from './app/inspector/Inspector'
 import { StatusBar } from './app/StatusBar'
 import { ToolRail } from './app/ToolRail'
@@ -17,6 +19,7 @@ export default function App() {
   const view = useEditor((s) => s.view)
   const coverBounds = useCoverFitBounds()
   const calibrating = useEditor((s) => s.calibrating)
+  const [splash, setSplash] = useState(true)
 
   return (
     <div className="app">
@@ -39,6 +42,7 @@ export default function App() {
       </div>
       <StatusBar />
       {calibrating && <CalibrateDialog />}
+      {splash && <Splash onDone={() => setSplash(false)} />}
     </div>
   )
 }

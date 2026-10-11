@@ -10,6 +10,7 @@ import { useDoc } from '../../store/doc'
 import { useEditor } from '../../store/editor'
 import { Key, Panel, Segmented, Toggle } from '../../ui/controls'
 import { ExportControls } from './ExportControls'
+import { FileNameField } from './FileNameField'
 
 export function PrintPanel() {
   const printerId = useEditor((s) => s.printerId)
@@ -85,6 +86,7 @@ export function PrintPanel() {
         </span>
       </div>
 
+      <FileNameField ext="pdf" kind="covers" />
       <ExportControls />
     </Panel>
   )

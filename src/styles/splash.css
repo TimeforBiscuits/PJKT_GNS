@@ -1,0 +1,420 @@
+/* ───────────── title card: //PJKT_GNS, Milano MCMXCV ───────────── */
+
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  perspective: 1800px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.sp-door {
+  position: absolute;
+  inset: 0;
+  transition:
+    transform 0.8s cubic-bezier(0.7, 0, 0.25, 1),
+    opacity 0.8s ease-in,
+    filter 0.8s ease-in;
+  will-change: transform;
+}
+
+.sp-door--left {
+  clip-path: inset(0 50% 0 0);
+  transform-origin: left center;
+}
+
+.sp-door--right {
+  clip-path: inset(0 0 0 50%);
+  transform-origin: right center;
+}
+
+/* Exit: the card opens down its fold like a notebook cover. */
+.splash.is-exit {
+  pointer-events: none;
+}
+
+.splash.is-exit .sp-door--left {
+  transform: rotateY(-100deg);
+  opacity: 0;
+  filter: brightness(0.4);
+}
+
+.splash.is-exit .sp-door--right {
+  transform: rotateY(100deg);
+  opacity: 0;
+  filter: brightness(0.4);
+}
+
+.splash.is-still .sp-door {
+  transition: opacity 0.2s linear;
+}
+
+.splash.is-still.is-exit .sp-door {
+  transform: none;
+}
+
+.sp-card {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 30% 40%, #1d1d1b 0%, #121210 55%, #0a0a09 100%);
+  color: #e9e4d8;
+  font-family: var(--font-ui);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* a cutting mat, barely there */
+.sp-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+  animation: sp-fade 1.2s ease-out both;
+}
+
+/* registration crop marks at the corners */
+.sp-crop {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-color: rgba(233, 228, 216, 0.55);
+  border-style: solid;
+  border-width: 0;
+  animation: sp-crop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both;
+}
+
+.sp-crop--tl {
+  top: 22px;
+  left: 22px;
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+  transform-origin: top left;
+}
+
+.sp-crop--tr {
+  top: 22px;
+  right: 22px;
+  border-top-width: 1.5px;
+  border-right-width: 1.5px;
+  transform-origin: top right;
+}
+
+.sp-crop--bl {
+  bottom: 22px;
+  left: 22px;
+  border-bottom-width: 1.5px;
+  border-left-width: 1.5px;
+  transform-origin: bottom left;
+}
+
+.sp-crop--br {
+  bottom: 22px;
+  right: 22px;
+  border-bottom-width: 1.5px;
+  border-right-width: 1.5px;
+  transform-origin: bottom right;
+}
+
+/* the fold, where the card will open */
+.sp-fold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  border-left: 1.5px dashed rgba(233, 228, 216, 0.16);
+  animation: sp-drop 1.1s cubic-bezier(0.3, 0.7, 0.2, 1) 0.2s both;
+}
+
+.sp-top {
+  position: absolute;
+  top: 34px;
+  left: 74px;
+  right: 74px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  color: #8f8a7f;
+  animation: sp-fade 0.6s ease-out 0.35s both;
+}
+
+.sp-title {
+  position: absolute;
+  left: clamp(28px, 9vw, 140px);
+  right: clamp(28px, 9vw, 140px);
+  top: 50%;
+  transform: translateY(-58%);
+}
+
+.sp-word {
+  display: flex;
+  align-items: baseline;
+  margin: 0;
+  font-weight: 900;
+  font-stretch: 125%;
+  /* the word, cursor included, is about 7.5 em wide: keep it inside the margins */
+  font-size: clamp(40px, min(10.4vw, 19vh), 188px);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  color: #f4f1ea;
+}
+
+.sp-slashes {
+  color: #ff4f00;
+  margin-right: 0.04em;
+  animation: sp-slash 0.55s cubic-bezier(0.2, 0.9, 0.2, 1) 0.15s both;
+}
+
+.sp-letters {
+  display: inline-block;
+  /* eight characters, typed in like a 90s terminal */
+  animation: sp-type 0.62s steps(8, end) 0.42s both;
+}
+
+.sp-letters em {
+  font-style: normal;
+  color: #ff4f00;
+}
+
+.sp-cursor {
+  display: inline-block;
+  width: 0.09em;
+  height: 0.72em;
+  margin-left: 0.08em;
+  background: #ff4f00;
+  box-shadow: 0 0 18px rgba(255, 79, 0, 0.6);
+  /* hidden while the letters type, then blinks and stays */
+  opacity: 0;
+  animation: sp-blink 0.5s steps(1, end) 1.04s 4 forwards;
+}
+
+.sp-rule {
+  height: clamp(5px, 0.8vh, 9px);
+  margin-top: clamp(14px, 2.4vh, 26px);
+  background: #ff4f00;
+  transform-origin: left center;
+  animation: sp-grow 0.7s cubic-bezier(0.6, 0, 0.2, 1) 0.85s both;
+}
+
+.sp-sub {
+  margin: clamp(14px, 2.2vh, 24px) 0 0;
+  font-weight: 800;
+  font-stretch: 85%;
+  font-size: clamp(13px, 1.6vw, 22px);
+  letter-spacing: 0.32em;
+  color: #e9e4d8;
+  animation: sp-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 1.05s both;
+}
+
+.sp-tag {
+  margin: 8px 0 0;
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 1.05vw, 14px);
+  letter-spacing: 0.06em;
+  color: #8f8a7f;
+  animation: sp-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 1.18s both;
+}
+
+.sp-ruler {
+  position: absolute;
+  left: clamp(28px, 9vw, 140px);
+  right: clamp(28px, 9vw, 140px);
+  bottom: 118px;
+  color: rgba(233, 228, 216, 0.6);
+  animation: sp-wipe 1s cubic-bezier(0.5, 0, 0.3, 1) 0.6s both;
+}
+
+.sp-ruler svg {
+  display: block;
+  width: 100%;
+  height: 30px;
+}
+
+.sp-span {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-top: 8px;
+  border-top: 1.5px solid #ff4f00;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #ff4f00;
+}
+
+.sp-bottom {
+  position: absolute;
+  left: clamp(28px, 9vw, 140px);
+  right: clamp(28px, 9vw, 140px);
+  bottom: 48px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+/* print control strip: C M Y K, signal, grey, paper */
+.sp-bar {
+  display: flex;
+  gap: 4px;
+}
+
+.sp-bar i {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  animation: sp-pop 0.35s cubic-bezier(0.3, 1.6, 0.4, 1) both;
+}
+
+.sp-lcd {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 14px;
+  border: 2px solid #000;
+  background: #050807;
+  box-shadow:
+    inset 2px 2px 0 #000,
+    inset -1px -1px 0 #253330,
+    0 0 0 1px #2c2b27;
+  font-family: var(--font-mono);
+  color: #46f0dc;
+  text-shadow: 0 0 8px rgba(70, 240, 220, 0.45);
+  animation: sp-fade 0.4s ease-out 0.5s both;
+}
+
+.sp-lcd-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #2f9e92;
+  text-shadow: none;
+  min-width: 19ch;
+}
+
+.sp-lcd-num {
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.sp-lcd-num small {
+  margin-left: 2px;
+  font-size: 12px;
+  color: #2f9e92;
+}
+
+/* quick replay within a session, or reduced motion: no intro */
+.splash.is-quick .sp-card *,
+.splash.is-quick .sp-card {
+  animation: none !important;
+}
+
+.splash.is-quick .sp-cursor {
+  opacity: 1;
+}
+
+@keyframes sp-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes sp-crop {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}
+
+@keyframes sp-drop {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes sp-slash {
+  from {
+    opacity: 0;
+    transform: translateX(-0.4em) skewX(-12deg);
+  }
+}
+
+@keyframes sp-type {
+  from {
+    clip-path: inset(-10% 100% -10% 0);
+  }
+  to {
+    clip-path: inset(-10% 0 -10% 0);
+  }
+}
+
+@keyframes sp-blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes sp-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes sp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes sp-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes sp-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@media (max-width: 760px) {
+  .sp-top span:last-child {
+    display: none;
+  }
+  .sp-bar {
+    display: none;
+  }
+}
+
+@media (max-height: 560px) {
+  .sp-ruler {
+    display: none;
+  }
+}

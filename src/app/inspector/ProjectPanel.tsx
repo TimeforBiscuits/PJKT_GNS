@@ -7,7 +7,8 @@ import { useEditor } from '../../store/editor'
 import { autosaveEnabled } from '../../store/persist'
 import { pickProjectFile, readProjectFile, writeProjectFile } from '../../store/projectFile'
 import { Key, Panel } from '../../ui/controls'
-import { canPickSaveLocation, deliver, pickSaveLocation, stamp, writeTo, type Writable } from '../files'
+import { baseName, canPickSaveLocation, deliver, pickSaveLocation, writeTo, type Writable } from '../files'
+import { FileNameField } from './FileNameField'
 
 const clock = (t: number) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
@@ -20,7 +21,7 @@ export function ProjectPanel() {
   const [busy, setBusy] = useState(false)
 
   const save = async () => {
-    const name = `PJKT_GNS-project-${stamp()}`
+    const name = baseName(useDoc.getState().project.name, 'project')
     let handle: Writable | null = null
     if (canPickSaveLocation()) {
       try {
@@ -71,6 +72,7 @@ export function ProjectPanel() {
       <span className="lcd" role="status">
         {autosaveEnabled() ? (savedAt ? `AUTOSAVED ${clock(savedAt)}` : 'AUTOSAVE ON') : 'AUTOSAVE OFF IN THIS BROWSER MODE'}
       </span>
+      <FileNameField ext="gns" kind="project" />
       <div className="grid-2">
         <Key size="sm" disabled={busy} onClick={() => void save()} title="Everything, pictures included, in one .gns file">
           Save file

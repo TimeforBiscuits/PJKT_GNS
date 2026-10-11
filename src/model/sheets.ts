@@ -50,7 +50,8 @@ export function migrateProject(raw: Project & { queue?: Record<string, number> }
       return l
     }),
   }))
-  if (Array.isArray(raw.sheets)) return { covers, sheets: raw.sheets }
+  const name = typeof raw.name === 'string' ? raw.name : ''
+  if (Array.isArray(raw.sheets)) return { covers, sheets: raw.sheets, name }
   const sheets: SheetSpec[] = []
   for (const formatId of FORMAT_IDS) {
     const run: string[] = []
@@ -63,7 +64,7 @@ export function migrateProject(raw: Project & { queue?: Record<string, number> }
       else sheets.push({ id: uid('sh'), formatId, slots, copies: 1 })
     }
   }
-  return { covers, sheets }
+  return { covers, sheets, name }
 }
 
 export const pageCount = (p: Project) => p.sheets.reduce((n, s) => n + (s.slots.some(Boolean) ? s.copies : 0), 0)

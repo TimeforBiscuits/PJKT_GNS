@@ -1540,3 +1540,8 @@ textarea.text-input:focus {
   font-size: 9.5px;
   line-height: 1.3;
 }
+
+.file-name .lcd input::placeholder {
+  color: var(--lcd-dim);
+  opacity: 1;
+}

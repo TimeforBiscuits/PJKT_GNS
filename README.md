@@ -30,6 +30,11 @@ white edge.
   opens the share sheet; choose *Save to Files* to pick a folder.
 - Work saves itself in the browser. Use *Save file* (a `.gns` project) to
   move work between devices or keep a backup.
+- *File name* (in Print and Project) names both the PDF and the project
+  file. Left empty, files are named by date.
+- The title card plays while your last session loads. Tap or press any key
+  to skip it; after the first time it plays quickly for the rest of the
+  session, and it stays still if the system asks for reduced motion.
 - For true 1:1 on screen, press *Cal* once per device and match a bank
   card.
 
@@ -81,6 +86,9 @@ white edge.
     share a page
   - Dashed cut lines on the white paper only, along each picture's outer
     edge; no other marks
+- [x] **Requests, round 2:**
+  - One file-name field for the PDF and the project file
+  - Milano '95 title card that opens down the fold
 - [ ] **7 · Cross-device polish**
 
 ## Development
