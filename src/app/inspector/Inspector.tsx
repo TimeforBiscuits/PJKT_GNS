@@ -2,7 +2,7 @@ import { useDoc, useSelectedLayer } from '../../store/doc'
 import { useEditor } from '../../store/editor'
 import { CoversPanel } from './CoversPanel'
 import { DocumentPanel } from './DocumentPanel'
-import { ImagePanel, ImageToolPanel } from './ImagePanel'
+import { ImagePanel } from './ImagePanel'
 import { LayersPanel } from './LayersPanel'
 import { PrintPanel, SheetsPanel } from './PrintPanel'
 import { ProjectPanel } from './ProjectPanel'
@@ -37,7 +37,6 @@ export function Inspector() {
         </>
       ) : (
         <>
-          {tool === 'image' && <ImageToolPanel />}
           {drawing && <ShapeToolPanel />}
           {tool === 'text' && <TextToolPanel />}
           <DocumentPanel />

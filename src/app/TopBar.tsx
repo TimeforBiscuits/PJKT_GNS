@@ -103,7 +103,12 @@ export function TopBar() {
         </Key>
       </div>
 
-      <Key variant="signal" onClick={() => setView('sheet')} title="Lay out covers on A4 and export the PDF">
+      <Key
+        variant="signal"
+        pressed={view === 'sheet'}
+        onClick={() => setView(view === 'sheet' ? 'cover' : 'sheet')}
+        title={view === 'sheet' ? 'Back to the cover' : 'Lay out covers on A4 and export the PDF'}
+      >
         <IconPrint />
         Stampa
       </Key>

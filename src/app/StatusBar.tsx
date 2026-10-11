@@ -7,7 +7,6 @@ import { useEditor, type ToolId } from '../store/editor'
 const HINTS: Record<ToolId, [string, string]> = {
   select: ['Select', 'tap to select · drag to move · full-bleed pictures drag to recompose · Space-drag or two fingers to pan'],
   hand: ['Hand', 'drag to pan · pinch or ⌘/Ctrl-scroll to zoom'],
-  image: ['Image', 'tap the cover to choose pictures · or drop files anywhere · placed full-bleed'],
   rect: ['Rectangle', 'drag to draw · Shift = square · Alt/⌥ = no snapping'],
   ellipse: ['Ellipse', 'drag to draw · Shift = circle · Alt/⌥ = no snapping'],
   polygon: ['Polygon', 'drag to draw · set the number of sides in the panel'],

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import type { ToolId } from '../store/editor'
+import { addImagesFromPicker } from '../editor/interact'
+import { useEditor, type ToolId } from '../store/editor'
 import {
   IconEllipse,
   IconHand,
@@ -11,8 +12,9 @@ import {
   IconText,
 } from '../ui/icons'
 
+/** A rail key: a tool to arm, or Image, which acts at once. */
 export interface ToolDef {
-  id: ToolId
+  id: ToolId | 'image'
   label: string
   key: string
   icon: ReactNode
@@ -34,3 +36,18 @@ export const TOOL_GROUPS: ToolDef[][] = [
 ]
 
 export const TOOLS: ToolDef[] = TOOL_GROUPS.flat()
+
+/**
+ * Press a rail key. Image isn't a mode: it opens the picker straight away,
+ * while this press still counts as the user gesture browsers require, and
+ * leaves Select armed whether or not anything is chosen. Tools only work on
+ * a cover, so picking one from the sheet view goes back to the cover.
+ */
+export function pressTool(id: ToolDef['id']) {
+  const ed = useEditor.getState()
+  if (ed.view === 'sheet' && id !== 'select' && id !== 'hand') ed.setView('cover')
+  if (id === 'image') {
+    ed.setTool('select')
+    void addImagesFromPicker()
+  } else ed.setTool(id)
+}

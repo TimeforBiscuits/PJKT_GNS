@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { LineCap, StrokeAlign, TextAlign } from '../model/doc'
 import { CSS_PX_PER_MM } from '../model/units'
 
-export type ToolId = 'select' | 'image' | 'rect' | 'ellipse' | 'polygon' | 'line' | 'text' | 'hand'
+export type ToolId = 'select' | 'rect' | 'ellipse' | 'polygon' | 'line' | 'text' | 'hand'
 
 export type ViewId = 'cover' | 'sheet'
 
@@ -136,7 +136,10 @@ export const useEditor = create<EditorState>((set) => ({
   message: null,
   savedAt: null,
 
-  setView: (view) => set((s) => ({ view, fitRequest: s.fitRequest + 1 })),
+  // Drawing tools belong to the cover they were picked for: a change of view
+  // always comes back to Select (or the Hand, which works on both).
+  setView: (view) =>
+    set((s) => ({ view, fitRequest: s.fitRequest + 1, tool: view === s.view || s.tool === 'hand' ? s.tool : 'select' })),
   setTool: (tool) => set({ tool }),
   toggleGuide: (g) => set((s) => ({ guides: { ...s.guides, [g]: !s.guides[g] } })),
   setTrimPreview: (trimPreview) => set({ trimPreview }),

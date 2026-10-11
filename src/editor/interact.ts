@@ -50,7 +50,6 @@ type Gesture =
   | { kind: 'content-pan'; id: string; start: Pt; content0: ImageLayer['content'] }
   | { kind: 'content-scale'; id: string; anchor: Pt; content0: ImageLayer['content'] }
   | { kind: 'draw'; id: string; start: Pt; shape: ShapeKind }
-  | { kind: 'image-pick' }
   | { kind: 'text-place' }
 
 /** Grab radius in screen pixels: fingers need more room than a mouse. */
@@ -443,16 +442,6 @@ export const coverHandlers: SceneHandlers = {
       gesture = { kind: 'draw', id: layer.id, start, shape: tool }
       return true
     }
-    if (tool === 'image') {
-      // Browsers only open a file dialog during a user gesture: mouse presses
-      // count on the way down, finger taps on the way up.
-      if (e.pointerType === 'mouse') {
-        void addImagesFromPicker()
-        return false
-      }
-      gesture = { kind: 'image-pick' }
-      return true
-    }
     if (tool === 'text') {
       gesture = { kind: 'text-place' }
       return true
@@ -466,11 +455,6 @@ export const coverHandlers: SceneHandlers = {
     useOverlay.getState().set({ guides: [], ghost: false })
     if (!g) return
     if (g.kind === 'draw') finishDraw(g, e)
-    if (g.kind === 'image-pick') {
-      // Opening a file dialog needs a completed tap on iPad, hence on release.
-      void addImagesFromPicker()
-      return
-    }
     if (g.kind === 'text-place') {
       useDoc.getState().addLayer(textDefaults(e.world))
       useEditor.getState().setTool('select')
@@ -480,7 +464,7 @@ export const coverHandlers: SceneHandlers = {
     useDoc.getState().endGesture()
   },
   cancel() {
-    if (gesture && gesture.kind !== 'image-pick' && gesture.kind !== 'text-place') useDoc.getState().endGesture()
+    if (gesture && gesture.kind !== 'text-place') useDoc.getState().endGesture()
     gesture = null
     useOverlay.getState().set({ guides: [], ghost: false })
   },

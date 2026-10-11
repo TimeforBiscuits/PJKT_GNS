@@ -1,25 +1,10 @@
 import { ppiColor } from '../../editor/draw'
-import { addImagesFromPicker } from '../../editor/interact'
 import { layerPpi, placeContent } from '../../editor/importImage'
 import { bleedFrame, type ImageLayer } from '../../model/doc'
 import { clampToFill, isFullBleed, pictureScale, pictureShift, scalePicture, shiftPicture } from '../../model/picture'
 import { useAssets } from '../../store/assets'
 import { activeCover, useActiveCover, useDoc } from '../../store/doc'
 import { Key, LcdField, Panel, Toggle } from '../../ui/controls'
-
-export function ImageToolPanel() {
-  return (
-    <Panel num="01" it="IMMAGINE" en="Image">
-      <Key variant="ink" onClick={() => void addImagesFromPicker()}>
-        Import image…
-      </Key>
-      <p className="note">
-        Or drop files on the canvas{navigator.maxTouchPoints > 1 ? '' : ', or paste'}. New images are placed{' '}
-        <b>full-bleed</b>. Double-tap a picture to move it inside its frame; drag the frame’s handles to crop.
-      </p>
-    </Panel>
-  )
-}
 
 /** Range slider whose drag counts as one undo step. */
 function GestureSlider({ value, min, max, step, onChange, label }: { value: number; min: number; max: number; step: number; onChange: (v: number) => void; label: string }) {

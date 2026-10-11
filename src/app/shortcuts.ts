@@ -4,7 +4,7 @@ import { addImages } from '../editor/interact'
 import type { ImageLayer } from '../model/doc'
 import { selectedLayer, useDoc } from '../store/doc'
 import { useEditor } from '../store/editor'
-import { TOOLS } from './tools'
+import { TOOLS, pressTool } from './tools'
 
 const typing = (t: EventTarget | null) =>
   t instanceof HTMLElement && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)
@@ -76,9 +76,10 @@ export function useShortcuts() {
         else ed.setTool('select')
         return
       }
-      if (e.altKey) return
+      // A held key repeats: arm a tool (or open the picker) once.
+      if (e.altKey || e.repeat) return
       const tool = TOOLS.find((t) => t.key.toLowerCase() === key)
-      if (tool) ed.setTool(tool.id)
+      if (tool) pressTool(tool.id)
     }
 
     // Paste pictures straight from the clipboard (desktop).

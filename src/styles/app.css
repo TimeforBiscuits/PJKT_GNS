@@ -177,7 +177,8 @@ select {
     0 3px 0 var(--ink);
 }
 
-.key--signal:active {
+.key--signal:active,
+.key--signal[aria-pressed='true'] {
   background: var(--signal-2);
   box-shadow:
     inset 2px 2px 0 #a83300,

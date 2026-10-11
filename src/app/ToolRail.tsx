@@ -1,11 +1,10 @@
 import { Fragment } from 'react'
 import { useEditor } from '../store/editor'
 import { Key, Led } from '../ui/controls'
-import { TOOL_GROUPS } from './tools'
+import { TOOL_GROUPS, pressTool } from './tools'
 
 export function ToolRail() {
   const tool = useEditor((s) => s.tool)
-  const setTool = useEditor((s) => s.setTool)
   return (
     <nav className="rail" aria-label="Tools">
       {TOOL_GROUPS.map((group, gi) => (
@@ -15,9 +14,9 @@ export function ToolRail() {
             <Key
               key={t.id}
               className="tool"
-              pressed={tool === t.id}
-              onClick={() => setTool(t.id)}
-              title={`${t.label} (${t.key})`}
+              pressed={t.id === 'image' ? undefined : tool === t.id}
+              onClick={() => pressTool(t.id)}
+              title={t.id === 'image' ? `Import pictures (${t.key})` : `${t.label} (${t.key})`}
             >
               <Led on={tool === t.id} />
               <span className="shortcut">{t.key}</span>
