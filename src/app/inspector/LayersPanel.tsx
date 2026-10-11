@@ -1,6 +1,7 @@
 import type { Layer } from '../../model/doc'
 import { useActiveCover, useDoc } from '../../store/doc'
-import { Panel } from '../../ui/controls'
+import { sampleLayers } from '../../editor/sample'
+import { Key, Panel } from '../../ui/controls'
 import { IconEllipse, IconImage, IconLine, IconPolygon, IconRect, IconText } from '../../ui/icons'
 
 const icon = (l: Layer) => {
@@ -9,6 +10,10 @@ const icon = (l: Layer) => {
   return { rect: <IconRect />, ellipse: <IconEllipse />, polygon: <IconPolygon />, line: <IconLine /> }[l.shape]
 }
 
+/** Unnamed text layers go by their first line. */
+const displayName = (l: Layer) =>
+  l.kind === 'text' && l.name === 'Text' ? l.text.split('\n')[0].trim().slice(0, 32) || 'Text' : l.name
+
 /** The cover's stack, topmost first. */
 export function LayersPanel() {
   const cover = useActiveCover()
@@ -16,14 +21,24 @@ export function LayersPanel() {
   const select = useDoc((s) => s.select)
   const update = useDoc((s) => s.updateLayer)
   const layers = [...cover.layers].reverse()
+  const edit = useDoc((s) => s.edit)
+  const addSample = () =>
+    edit((_, c) => {
+      c.layers.push(...sampleLayers(c))
+    })
 
   return (
     <Panel num="05" it="LIVELLI" en={`Layers · ${layers.length}`}>
       {layers.length === 0 ? (
-        <div className="empty">
-          <b>No layers yet</b>
-          Import an image (I), draw a shape (R · E · P · L) or set some type (T).
-        </div>
+        <>
+          <div className="empty">
+            <b>No layers yet</b>
+            Import an image (I), draw a shape (R · E · P · L) or set some type (T).
+          </div>
+          <Key size="sm" onClick={addSample}>
+            Start from a sample layout
+          </Key>
+        </>
       ) : (
         <ul className="layer-list">
           {layers.map((l) => (
@@ -31,7 +46,7 @@ export function LayersPanel() {
               <button type="button" className="layer-pick" onClick={() => select(l.id)} aria-pressed={l.id === selectedId}>
                 <span className="layer-icon">{icon(l)}</span>
                 <span className="layer-title" style={{ opacity: l.hidden ? 0.45 : 1 }}>
-                  {l.name}
+                  {displayName(l)}
                 </span>
               </button>
               <button

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { uid, type Frame, type ImageLayer, type Layer, type ShapeKind, type ShapeLayer, type TextLayer } from '../model/doc'
 import { apply, dist, frameCenter, frameMatrix, invert, normDeg, reframe, toLocal, type Mat, type Pt } from '../model/geometry'
+import { FORMATS, SAFE_MM } from '../model/formats'
 import { ptToMm } from '../model/units'
 import { useDoc, activeCover, selectedLayer } from '../store/doc'
 import { useEditor } from '../store/editor'
@@ -187,6 +188,10 @@ function shapeDefaults(shape: ShapeKind, frame: Frame): ShapeLayer {
 function textDefaults(at: Pt): TextLayer {
   const st = useEditor.getState().style
   const size = ptToMm(st.fontSizePt)
+  // Run the frame to the panel's safe edge so new text never spills over the fold.
+  const { w: W } = FORMATS[activeCover().formatId].trim
+  const edge = at.x < W / 2 ? W / 2 - SAFE_MM : W - SAFE_MM
+  const w = Math.max(20, edge - at.x)
   return {
     id: uid('ly'),
     kind: 'text',
@@ -196,7 +201,7 @@ function textDefaults(at: Pt): TextLayer {
     opacity: 1,
     x: at.x,
     y: at.y - size * 0.8,
-    w: 70,
+    w,
     h: size,
     rotation: 0,
     text: 'Text',
@@ -205,9 +210,9 @@ function textDefaults(at: Pt): TextLayer {
     sizePt: st.fontSizePt,
     leadingPt: st.leadingPt,
     tracking: st.tracking,
-    align: 'left',
-    color: st.fill ?? '#111111',
-    uppercase: false,
+    align: st.textAlign,
+    color: st.textColor,
+    uppercase: st.uppercase,
   }
 }
 

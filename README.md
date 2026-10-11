@@ -48,7 +48,7 @@ white edge.
   - Rectangle, ellipse, polygon and line
   - Fill, or hollow with stroke weight and alignment
   - Layers, snapping, undo
-- [ ] **4 · Type:**
+- [x] **4 · Type:**
   - Built-in library of bold sans faces
   - Size, leading and tracking
   - Text converted to outlines for exact output
@@ -83,5 +83,13 @@ src/
   styles/   the Studio Grigio design system
 ```
 
-The interface fonts are Archivo and IBM Plex Mono, both under the SIL Open
-Font License.
+### Fonts
+
+The cover library holds 56 families (46 of them sans-serif), Latin subsets
+of the regular styles, taken from the [Fontsource](https://fontsource.org)
+packages of Google Fonts. All are free to use in print; see
+`public/fonts/LICENSES.txt`. To change the list, edit
+`src/fonts/families.json` and run `npm run fonts`.
+
+The interface itself is set in Archivo and IBM Plex Mono (SIL Open Font
+License).

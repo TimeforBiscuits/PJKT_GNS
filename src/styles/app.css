@@ -1314,3 +1314,61 @@ textarea.text-input:focus {
   outline: 2px solid var(--signal);
   outline-offset: 1px;
 }
+
+/* ───────────────────────── font browser ───────────────────────── */
+
+.font-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 46px;
+  padding: 4px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 2px;
+  background: var(--paper);
+  box-shadow: 0 3px 0 var(--ink);
+  font-size: 21px;
+  line-height: 1.1;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.font-current[aria-expanded='true'] {
+  box-shadow: 0 1px 0 var(--ink);
+  transform: translateY(2px);
+}
+
+.font-caret {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+
+.font-browser {
+  display: grid;
+  gap: 8px;
+}
+
+.font-browser .font-list {
+  max-height: 340px;
+}
+
+.font-group-label {
+  position: sticky;
+  top: 0;
+  padding: 4px 10px;
+  background: var(--ink);
+  color: var(--signal);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.font-item {
+  width: 100%;
+  font-size: 18px;
+  line-height: 1.15;
+}

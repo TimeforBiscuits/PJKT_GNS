@@ -1,0 +1,669 @@
+[
+  {
+    "id": "inter-tight",
+    "family": "Inter Tight",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "inter",
+    "family": "Inter",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "archivo",
+    "family": "Archivo",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "archivo-black",
+    "family": "Archivo Black",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400
+    ]
+  },
+  {
+    "id": "archivo-narrow",
+    "family": "Archivo Narrow",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400,
+      500,
+      700
+    ]
+  },
+  {
+    "id": "schibsted-grotesk",
+    "family": "Schibsted Grotesk",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "hanken-grotesk",
+    "family": "Hanken Grotesk",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "familjen-grotesk",
+    "family": "Familjen Grotesk",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700
+    ]
+  },
+  {
+    "id": "space-grotesk",
+    "family": "Space Grotesk",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700
+    ]
+  },
+  {
+    "id": "host-grotesk",
+    "family": "Host Grotesk",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800
+    ]
+  },
+  {
+    "id": "instrument-sans",
+    "family": "Instrument Sans",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700
+    ]
+  },
+  {
+    "id": "geist",
+    "family": "Geist",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "mona-sans",
+    "family": "Mona Sans",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "public-sans",
+    "family": "Public Sans",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "libre-franklin",
+    "family": "Libre Franklin",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "work-sans",
+    "family": "Work Sans",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "ibm-plex-sans",
+    "family": "IBM Plex Sans",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700
+    ]
+  },
+  {
+    "id": "onest",
+    "family": "Onest",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "bricolage-grotesque",
+    "family": "Bricolage Grotesque",
+    "category": "sans",
+    "style": "grotesk",
+    "weights": [
+      400,
+      500,
+      700,
+      800
+    ]
+  },
+  {
+    "id": "manrope",
+    "family": "Manrope",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800
+    ]
+  },
+  {
+    "id": "dm-sans",
+    "family": "DM Sans",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "montserrat",
+    "family": "Montserrat",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "poppins",
+    "family": "Poppins",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "jost",
+    "family": "Jost",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "outfit",
+    "family": "Outfit",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "sora",
+    "family": "Sora",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800
+    ]
+  },
+  {
+    "id": "red-hat-display",
+    "family": "Red Hat Display",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "plus-jakarta-sans",
+    "family": "Plus Jakarta Sans",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800
+    ]
+  },
+  {
+    "id": "figtree",
+    "family": "Figtree",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "lexend",
+    "family": "Lexend",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "rubik",
+    "family": "Rubik",
+    "category": "sans",
+    "style": "geometric",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "syne",
+    "family": "Syne",
+    "category": "sans",
+    "style": "display",
+    "weights": [
+      400,
+      500,
+      700,
+      800
+    ]
+  },
+  {
+    "id": "unbounded",
+    "family": "Unbounded",
+    "category": "sans",
+    "style": "display",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "funnel-display",
+    "family": "Funnel Display",
+    "category": "sans",
+    "style": "display",
+    "weights": [
+      400,
+      500,
+      700,
+      800
+    ]
+  },
+  {
+    "id": "titillium-web",
+    "family": "Titillium Web",
+    "category": "sans",
+    "style": "tech",
+    "weights": [
+      400,
+      700,
+      900
+    ]
+  },
+  {
+    "id": "michroma",
+    "family": "Michroma",
+    "category": "sans",
+    "style": "tech",
+    "weights": [
+      400
+    ]
+  },
+  {
+    "id": "chakra-petch",
+    "family": "Chakra Petch",
+    "category": "sans",
+    "style": "tech",
+    "weights": [
+      400,
+      500,
+      700
+    ]
+  },
+  {
+    "id": "barlow",
+    "family": "Barlow",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "barlow-semi-condensed",
+    "family": "Barlow Semi Condensed",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "barlow-condensed",
+    "family": "Barlow Condensed",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "roboto-condensed",
+    "family": "Roboto Condensed",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "oswald",
+    "family": "Oswald",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400,
+      500,
+      700
+    ]
+  },
+  {
+    "id": "big-shoulders-display",
+    "family": "Big Shoulders Display",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "league-gothic",
+    "family": "League Gothic",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400
+    ]
+  },
+  {
+    "id": "anton",
+    "family": "Anton",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400
+    ]
+  },
+  {
+    "id": "bebas-neue",
+    "family": "Bebas Neue",
+    "category": "sans",
+    "style": "condensed",
+    "weights": [
+      400
+    ]
+  },
+  {
+    "id": "ibm-plex-mono",
+    "family": "IBM Plex Mono",
+    "category": "mono",
+    "style": "mono",
+    "weights": [
+      400,
+      500,
+      700
+    ]
+  },
+  {
+    "id": "space-mono",
+    "family": "Space Mono",
+    "category": "mono",
+    "style": "mono",
+    "weights": [
+      400,
+      700
+    ]
+  },
+  {
+    "id": "jetbrains-mono",
+    "family": "JetBrains Mono",
+    "category": "mono",
+    "style": "mono",
+    "weights": [
+      400,
+      500,
+      700,
+      800
+    ]
+  },
+  {
+    "id": "bodoni-moda",
+    "family": "Bodoni Moda",
+    "category": "serif",
+    "style": "serif",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "playfair-display",
+    "family": "Playfair Display",
+    "category": "serif",
+    "style": "serif",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "instrument-serif",
+    "family": "Instrument Serif",
+    "category": "serif",
+    "style": "serif",
+    "weights": [
+      400
+    ]
+  },
+  {
+    "id": "libre-caslon-text",
+    "family": "Libre Caslon Text",
+    "category": "serif",
+    "style": "serif",
+    "weights": [
+      400,
+      700
+    ]
+  },
+  {
+    "id": "eb-garamond",
+    "family": "EB Garamond",
+    "category": "serif",
+    "style": "serif",
+    "weights": [
+      400,
+      500,
+      700,
+      800
+    ]
+  },
+  {
+    "id": "fraunces",
+    "family": "Fraunces",
+    "category": "serif",
+    "style": "serif",
+    "weights": [
+      400,
+      500,
+      700,
+      800,
+      900
+    ]
+  },
+  {
+    "id": "dm-serif-display",
+    "family": "DM Serif Display",
+    "category": "serif",
+    "style": "serif",
+    "weights": [
+      400
+    ]
+  }
+]

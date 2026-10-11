@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { LineCap, StrokeAlign } from '../model/doc'
+import type { LineCap, StrokeAlign, TextAlign } from '../model/doc'
 import { CSS_PX_PER_MM } from '../model/units'
 
 export type ToolId = 'select' | 'image' | 'rect' | 'ellipse' | 'polygon' | 'line' | 'text' | 'hand'
@@ -37,6 +37,9 @@ export interface ToolStyle {
   sides: number
   radius: number
   cap: LineCap
+  textAlign: TextAlign
+  uppercase: boolean
+  textColor: string
 }
 
 const CALIBRATION_KEY = 'pjkt_gns.pxPerMm'
@@ -69,8 +72,8 @@ interface EditorState {
   calibrating: boolean
   printerId: string
   dpi: 300 | 600
-  /** Bumped to move keyboard focus into the text box of the selected text layer. */
-  textFocus: number
+  /** Set to move keyboard focus into the text box of the selected text layer. */
+  textFocus: boolean
   /** A short status message, e.g. an import error. */
   message: { text: string; at: number } | null
   marks: { crop: boolean; fold: boolean }
@@ -90,6 +93,7 @@ interface EditorState {
   setDpi: (dpi: 300 | 600) => void
   toggleMark: (m: 'crop' | 'fold') => void
   focusText: () => void
+  textFocused: () => void
   flash: (text: string) => void
 }
 
@@ -116,12 +120,15 @@ export const useEditor = create<EditorState>((set) => ({
     sides: 3,
     radius: 0,
     cap: 'butt',
+    textAlign: 'left',
+    uppercase: false,
+    textColor: '#111111',
   },
   calibrating: false,
   printerId: 'pixma',
   dpi: 600,
   marks: { crop: true, fold: true },
-  textFocus: 0,
+  textFocus: false,
   message: null,
 
   setView: (view) => set((s) => ({ view, fitRequest: s.fitRequest + 1 })),
@@ -146,7 +153,8 @@ export const useEditor = create<EditorState>((set) => ({
   setPrinter: (printerId) => set({ printerId }),
   setDpi: (dpi) => set({ dpi }),
   toggleMark: (m) => set((s) => ({ marks: { ...s.marks, [m]: !s.marks[m] } })),
-  focusText: () => set((s) => ({ textFocus: s.textFocus + 1 })),
+  focusText: () => set({ textFocus: true }),
+  textFocused: () => set({ textFocus: false }),
   flash: (text) => set({ message: { text, at: Date.now() } }),
 }))
 

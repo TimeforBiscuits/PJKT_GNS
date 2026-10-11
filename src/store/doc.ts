@@ -1,6 +1,7 @@
 import { produce, type Draft } from 'immer'
 import { create } from 'zustand'
 import { newCover, uid, type Cover, type Layer, type Project } from '../model/doc'
+import { reframe } from '../model/geometry'
 import type { FormatId } from '../model/formats'
 import { coversPerSheet } from '../model/imposition'
 import { FORMATS } from '../model/formats'
@@ -47,6 +48,8 @@ interface DocState {
   removeLayer: (id: string) => void
   duplicateLayer: (id: string) => void
   restack: (id: string, to: 'up' | 'down' | 'top' | 'bottom') => void
+  /** Text frames grow and shrink with their text; not an undoable edit. */
+  syncTextHeight: (id: string, h: number) => void
 }
 
 const first = newCover('notebook', 1)
@@ -184,6 +187,18 @@ export const useDoc = create<DocState>((set, get) => {
         const [l] = c.layers.splice(i, 1)
         const j = to === 'top' ? c.layers.length : to === 'bottom' ? 0 : to === 'up' ? i + 1 : i - 1
         c.layers.splice(Math.max(0, Math.min(c.layers.length, j)), 0, l)
+      }),
+    syncTextHeight: (id, h) =>
+      set((s) => {
+        const project = produce(s.project, (p) => {
+          for (const c of p.covers)
+            for (const l of c.layers)
+              if (l.id === id && Math.abs(l.h - h) > 1e-4) {
+                // Keep the frame's top-left corner where it is, even when rotated.
+                Object.assign(l, reframe(l, 0, 0, l.w, h))
+              }
+        })
+        return project === s.project ? {} : { project }
       }),
   }
 })

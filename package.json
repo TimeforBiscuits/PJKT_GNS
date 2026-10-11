@@ -10,17 +10,20 @@
     "lint": "oxlint",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "check": "tsc -b && oxlint && vitest run"
+    "check": "tsc -b && oxlint && vitest run",
+    "fonts": "node scripts/fetch-fonts.mjs"
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
+    "fontkit": "^2.0.4",
     "immer": "^11.1.21",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@types/fontkit": "^2.0.9",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
@@ -30,5 +33,5 @@
     "vite": "^8.3.0",
     "vitest": "^5.0.3"
   },
-  "description": "Project Gans — a print-accurate notebook cover studio"
+  "description": "Project Gans \u2014 a print-accurate notebook cover studio"
 }
