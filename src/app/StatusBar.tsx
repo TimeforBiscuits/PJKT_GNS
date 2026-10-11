@@ -63,7 +63,7 @@ export function StatusBar() {
         </span>
       )}
       <span className="meta">
-        {format.name} · {perSheet}/A4 · bleed {BLEED_MM.toFixed(1)} · {dpi} dpi · v0.1
+        {format.name} · {perSheet}/A4 · bleed {BLEED_MM.toFixed(1)} · {dpi} dpi · v1.0
       </span>
     </footer>
   )

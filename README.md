@@ -89,7 +89,10 @@ white edge.
 - [x] **Requests, round 2:**
   - One file-name field for the PDF and the project file
   - Milano '95 title card that opens down the fold
-- [ ] **7 · Cross-device polish**
+- [x] **7 · Cross-device polish:** real-iPad fixes (Image key acts at once,
+  Stampa toggles the print view)
+
+**v1.0**, October 2026.
 
 ## Development
 
