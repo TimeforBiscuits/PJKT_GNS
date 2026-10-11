@@ -1398,3 +1398,101 @@ textarea.text-input:focus {
   color: #ff6b4f;
   text-shadow: none;
 }
+
+/* ───────────────────────── sheet composer ───────────────────────── */
+
+.sheet-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 10px;
+  padding: 8px;
+  border: 2px solid var(--ink);
+  background: var(--chassis-2);
+  box-shadow: inset 1px 1px 0 var(--chassis-hi);
+}
+
+.sheet-mini {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.slot {
+  position: absolute;
+  padding: 0;
+  border: 1px dashed var(--ink-3);
+  background: #f3f1ec;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.slot.is-picking {
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.slot-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: block;
+}
+
+.slot-art svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.slot-empty {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ink-3);
+}
+
+.sheet-meta {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.sheet-title {
+  font-weight: 800;
+  font-stretch: 85%;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sheet-title b {
+  font-family: var(--font-mono);
+  color: var(--signal-2);
+}
+
+.slot-picker {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+}
+
+.slot-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.slot-blank {
+  min-width: 52px;
+  align-content: center;
+}

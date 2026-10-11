@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { composeSheets } from './compose'
 import { newCover, type Project } from './doc'
+import { dropCover, migrateProject, newSheet, pageCount, placeCover, refileCover } from './sheets'
 import { apply, frameMatrix, invert, reframe, type Pt } from './geometry'
 import { PRINTERS } from './imposition'
 import { polygonPoints, rectPath, toSvgD } from './path'
@@ -49,25 +50,74 @@ describe('paths', () => {
   })
 })
 
-describe('print queue', () => {
-  it('packs notebooks two to a sheet and keeps squares on their own sheets', () => {
+describe('sheets', () => {
+  it('prints two different notebooks on one page', () => {
     const a = newCover('notebook', 1)
     const b = newCover('notebook', 2)
     const sq = newCover('square', 3)
-    const project: Project = { covers: [a, sq, b], queue: { [a.id]: 2, [b.id]: 1, [sq.id]: 2 } }
+    const project: Project = {
+      covers: [a, b, sq],
+      sheets: [
+        { ...newSheet('notebook'), slots: [a.id, b.id], copies: 2 },
+        { ...newSheet('square'), slots: [sq.id], copies: 1 },
+        { ...newSheet('notebook'), slots: [null, null], copies: 3 },
+      ],
+    }
     const sheets = composeSheets(project, PRINTERS.pixma)
-    expect(sheets.map((s) => [s.formatId, s.covers.map((c) => c.id)])).toEqual([
-      ['notebook', [a.id, a.id]],
-      ['notebook', [b.id]],
-      ['square', [sq.id]],
-      ['square', [sq.id]],
+    expect(sheets.map((s) => [s.formatId, s.covers.map((c) => c?.id ?? null), s.spec.copies])).toEqual([
+      ['notebook', [a.id, b.id], 2],
+      ['square', [sq.id], 1],
     ])
-    // a half-full sheet still lays its one cover out properly
-    expect(sheets[1].layout.placements).toHaveLength(1)
+    expect(pageCount(project)).toBe(3)
   })
 
-  it('prints nothing for zero copies', () => {
+  it('keeps a blank slot blank and prints no marks for it', () => {
     const a = newCover('notebook', 1)
-    expect(composeSheets({ covers: [a], queue: { [a.id]: 0 } }, PRINTERS.pixma)).toEqual([])
+    const [sheet] = composeSheets({ covers: [a], sheets: [{ ...newSheet('notebook'), slots: [null, a.id] }] }, PRINTERS.pixma)
+    expect(sheet.covers[0]).toBeNull()
+    expect(sheet.layout.marks.every((m) => m.slot === 1)).toBe(true)
+  })
+
+  it('never prints marks on a cover’s bleed', () => {
+    const a = newCover('notebook', 1)
+    const [sheet] = composeSheets({ covers: [a], sheets: [newSheet('notebook', a.id)] }, PRINTERS.pixma)
+    expect(sheet.layout.marks.some((m) => m.inBleed)).toBe(false)
+  })
+
+  it('runs dashed cut lines along every trim edge, never across a cover', () => {
+    const a = newCover('notebook', 1)
+    const [sheet] = composeSheets({ covers: [a], sheets: [newSheet('notebook', a.id)] }, PRINTERS.pixma)
+    const [top, bottom] = sheet.layout.placements
+    const xs = new Set(sheet.cuts.filter((c) => c.x1 === c.x2).map((c) => c.x1))
+    const ys = new Set(sheet.cuts.filter((c) => c.y1 === c.y2).map((c) => c.y1))
+    expect([...xs].sort((p, q) => p - q)).toEqual([top.trim.x, top.trim.x + top.trim.w])
+    expect([...ys].sort((p, q) => p - q)).toEqual([top.trim.y, top.trim.y + 140, bottom.trim.y, bottom.trim.y + 140])
+    // horizontal cuts span the sheet edge to edge
+    for (const c of sheet.cuts.filter((c) => c.y1 === c.y2)) expect([c.x1, c.x2]).toEqual([0, 210])
+  })
+
+  it('follows covers as they come and go', () => {
+    const a = newCover('notebook', 1)
+    const b = newCover('notebook', 2)
+    let sheets = [newSheet('notebook', a.id)]
+    sheets[0].slots[1] = null
+    sheets = placeCover(sheets, b)
+    expect(sheets[0].slots).toEqual([a.id, b.id])
+    sheets = dropCover(sheets, a.id)
+    expect(sheets[0].slots).toEqual([null, b.id])
+    sheets = refileCover(sheets, { ...b, formatId: 'square' })
+    expect(sheets).toHaveLength(1)
+    expect(sheets[0].formatId).toBe('square')
+  })
+
+  it('turns an old copies queue into sheets', () => {
+    const a = newCover('notebook', 1)
+    const b = newCover('notebook', 2)
+    const old = { covers: [a, b], queue: { [a.id]: 2, [b.id]: 1 } } as unknown as Project
+    const p = migrateProject(old)
+    expect(p.sheets.map((s) => s.slots)).toEqual([
+      [a.id, a.id],
+      [b.id, null],
+    ])
   })
 })

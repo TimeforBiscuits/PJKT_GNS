@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { newCover } from '../../model/doc'
-import { coversPerSheet } from '../../model/imposition'
-import { FORMATS } from '../../model/formats'
+import { newSheet } from '../../model/sheets'
 import { useAssets } from '../../store/assets'
 import { useDoc } from '../../store/doc'
 import { useEditor } from '../../store/editor'
@@ -62,7 +61,7 @@ export function ProjectPanel() {
   const startNew = () => {
     const c = newCover('notebook', 1)
     useAssets.getState().replace([])
-    useDoc.getState().loadProject({ covers: [c], queue: { [c.id]: coversPerSheet(FORMATS.notebook) } })
+    useDoc.getState().loadProject({ covers: [c], sheets: [newSheet('notebook', c.id)] })
     setConfirmNew(false)
     requestFit()
   }

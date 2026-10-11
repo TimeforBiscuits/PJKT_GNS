@@ -1,5 +1,6 @@
 import { createStore, del, get, keys, set } from 'idb-keyval'
 import type { Project } from '../model/doc'
+import { migrateProject } from '../model/sheets'
 import { useAssets, type Asset } from './assets'
 import { useDoc } from './doc'
 import { useEditor } from './editor'
@@ -46,7 +47,7 @@ export async function restore(): Promise<boolean> {
       saved.add(id)
     }
     useAssets.getState().replace(assets)
-    useDoc.getState().loadProject(snap.project, snap.activeId)
+    useDoc.getState().loadProject(migrateProject(snap.project), snap.activeId)
     lastSaved.at = snap.savedAt
     return !isEmptyProject(snap.project)
   } catch {

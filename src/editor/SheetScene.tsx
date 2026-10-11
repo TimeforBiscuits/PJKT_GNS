@@ -1,5 +1,5 @@
 import { SHEET_GAP, type Sheet } from '../model/compose'
-import { placementTransform } from '../model/imposition'
+import { CUT_DASH, placementTransform } from '../model/imposition'
 import { A4, type Rect } from '../model/units'
 import { useEditor } from '../store/editor'
 import { Caption, DimH, DimV, Hatches } from './annotations'
@@ -22,7 +22,7 @@ export function SheetScene({ cam }: ViewInfo) {
         <g>
           <rect x={S0.x} y={S0.y} width={S0.w} height={S0.h} fill="none" stroke="#5c5850" strokeDasharray="6 5" strokeWidth={1.5} />
           <Caption x={S0.x + S0.w / 2} y={S0.y + S0.h / 2} color="#8f8a7f" size={11}>
-            NOTHING QUEUED — SET COPIES IN THE PANEL
+            NO SHEETS — ADD ONE IN THE PANEL
           </Caption>
         </g>
       )}
@@ -49,6 +49,8 @@ function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; 
   const { layout } = sheet
   const P = layout.printable
   const rectPath = (r: Rect) => `M${r.x} ${r.y}h${r.w}v${r.h}h${-r.w}Z`
+  const cutPath = sheet.cuts.map((c) => `M${sx(c.x1)} ${sy(c.y1)}L${sx(c.x2)} ${sy(c.y2)}`).join('')
+  const dash = CUT_DASH * z
 
   const visible = layout.marks.filter((m) => marks[m.kind])
   const markPath = (inBleed: boolean, kind: 'crop' | 'fold') =>
@@ -69,15 +71,16 @@ function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; 
       <rect x={S.x + 6} y={S.y + 6} width={S.w} height={S.h} fill="rgba(0,0,0,0.55)" />
       <g transform={`translate(${cam.x} ${cam.y + oy * z}) scale(${z})`}>
         <rect x={0} y={0} width={A4.w} height={A4.h} fill="#fff" />
-        {layout.placements.map((p, i) =>
-          sheet.covers[i] ? (
+        {layout.placements.map((p, i) => {
+          const cover = sheet.covers[i]
+          return cover ? (
             <g key={i} clipPath={`url(#sheet-${index}-clip-${i})`}>
               <g transform={placementTransform(p)}>
-                <CoverArt cover={sheet.covers[i]} idp={`sh${index}-${i}`} />
+                <CoverArt cover={cover} idp={`sh${index}-${i}`} />
               </g>
             </g>
-          ) : null,
-        )}
+          ) : null
+        })}
       </g>
 
       <path d={rectPath(S) + rectPath({ x: sx(P.x), y: sy(P.y), w: P.w * z, h: P.h * z })} fillRule="evenodd" fill="url(#hatch-noprint)" />
@@ -85,6 +88,8 @@ function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; 
       {layout.placements.map((p, i) => (
         <rect
           key={i}
+          opacity={sheet.covers[i] ? 1 : 0.5}
+          strokeDasharray={sheet.covers[i] ? undefined : '4 4'}
           x={crisp(sx(p.trim.x))}
           y={crisp(sy(p.trim.y))}
           width={Math.round(p.trim.w * z)}
@@ -94,10 +99,14 @@ function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; 
         />
       ))}
 
-      {/* marks on discarded bleed get a white halo so they read on any image */}
-      <path d={markPath(true, 'crop') + markPath(true, 'fold')} stroke="#fff" strokeWidth={3} />
-      <path d={markPath(true, 'crop') + markPath(false, 'crop')} stroke="#000" strokeWidth={1.2} />
-      <path d={markPath(true, 'fold') + markPath(false, 'fold')} stroke="#000" strokeWidth={1.2} strokeDasharray="3 2" />
+      {marks.cut && (
+        <g>
+          <path d={cutPath} stroke="#000" strokeWidth={1.2} strokeDasharray={`${dash} ${dash}`} />
+          <path d={cutPath} stroke="#fff" strokeWidth={1.2} strokeDasharray={`${dash} ${dash}`} strokeDashoffset={dash} />
+        </g>
+      )}
+      <path d={markPath(false, 'crop')} stroke="#000" strokeWidth={1.2} />
+      <path d={markPath(false, 'fold')} stroke="#000" strokeWidth={1.2} strokeDasharray="3 2" />
 
       {layout.placements.map((p, i) => {
         const cy = sy(p.trim.y + p.trim.h / 2)
@@ -112,7 +121,7 @@ function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; 
       })}
 
       <Caption x={S.x} y={S.y + S.h + 18} anchor="start" color="#d8d3c8" size={10}>
-        {`SHEET ${index + 1} / ${count} · ${sheet.covers.length} × ${sheet.formatId.toUpperCase()}`}
+        {`SHEET ${index + 1} / ${count} · ${sheet.covers.filter(Boolean).length} × ${sheet.formatId.toUpperCase()}${sheet.spec.copies > 1 ? ` · PRINTS ×${sheet.spec.copies}` : ''}`}
       </Caption>
       {index === 0 && (
         <Caption x={S.x + S.w} y={S.y + S.h + 18} anchor="end" color="var(--signal)" size={10}>

@@ -2,7 +2,6 @@ import { zoomActual, zoomIn, zoomOut, zoomPercent } from '../editor/camera'
 import { placeContent } from '../editor/importImage'
 import { bleedFrame } from '../model/doc'
 import { FORMATS, FORMAT_IDS, type FormatId } from '../model/formats'
-import { coversPerSheet } from '../model/imposition'
 import { useAssets } from '../store/assets'
 import { useActiveCover, useDoc } from '../store/doc'
 import { useEditor, type ViewId } from '../store/editor'
@@ -11,7 +10,8 @@ import { IconFit, IconMinus, IconPlus, IconPrint } from '../ui/icons'
 
 export function TopBar() {
   const formatId = useActiveCover().formatId
-  const edit = useDoc((s) => s.edit)
+  const setCoverFormat = useDoc((s) => s.setCoverFormat)
+  const activeId = useDoc((s) => s.activeId)
   const view = useEditor((s) => s.view)
   const setView = useEditor((s) => s.setView)
   const zoom = useEditor((s) => s.camera.zoom)
@@ -23,12 +23,10 @@ export function TopBar() {
 
   const setFormat = (id: FormatId) => {
     const assets = useAssets.getState().assets
-    edit((p, cover) => {
+    if (id === formatId) return
+    setCoverFormat(activeId, id, (cover) => {
       const old = bleedFrame(cover)
-      // A cover still on its default copy count follows the new format's sheet.
-      if (p.queue[cover.id] === coversPerSheet(FORMATS[cover.formatId])) p.queue[cover.id] = coversPerSheet(FORMATS[id])
-      cover.formatId = id
-      const next = bleedFrame(cover)
+      const next = bleedFrame({ ...cover, formatId: id })
       // Full-bleed pictures follow the new size; everything else stays put.
       for (const l of cover.layers) {
         const a = l.kind === 'image' ? assets[l.assetId] : undefined

@@ -7,6 +7,7 @@ import { PDFDocument, PDFName } from 'pdf-lib'
 import { describe, expect, it } from 'vitest'
 import catalog from '../fonts/catalog.json'
 import { composeSheets } from '../model/compose'
+import { newSheet } from '../model/sheets'
 import { newCover, uid, type Cover, type ShapeLayer, type TextLayer } from '../model/doc'
 import { PRINTERS } from '../model/imposition'
 import type { ShapingFont } from '../model/text'
@@ -68,14 +69,15 @@ const words: TextLayer = {
   align: 'left',
   color: '#ff4f00',
   uppercase: false,
+  spans: [],
 }
 
 /** A notebook whose trim is solid black — easy to measure once printed. */
 const blackNotebook = (): Cover => ({ ...newCover('notebook', 1), layers: [block(0, 0, 180, 140), words] })
 
-async function build(cover: Cover, copies: number) {
-  const sheets = composeSheets({ covers: [cover], queue: { [cover.id]: copies } }, PRINTERS.pixma)
-  const bytes = await writeSheetsPdf(sheets, deps, { marks: { crop: true, fold: true }, slug: () => 'TEST SLUG' })
+async function build(cover: Cover, copies: number, cut = false) {
+  const sheets = composeSheets({ covers: [cover], sheets: [{ ...newSheet('notebook', cover.id), copies }] }, PRINTERS.pixma)
+  const bytes = await writeSheetsPdf(sheets, deps, { marks: { crop: true, fold: true, cut }, slug: () => 'TEST SLUG' })
   return { bytes, sheets }
 }
 
@@ -106,9 +108,9 @@ function render(bytes: Uint8Array) {
 describe('PDF output', () => {
   it('writes exact A4 pages that ask to be printed at actual size', async () => {
     const { bytes, sheets } = await build(blackNotebook(), 3)
-    expect(sheets).toHaveLength(2)
+    expect(sheets).toHaveLength(1)
     const doc = await PDFDocument.load(bytes)
-    expect(doc.getPageCount()).toBe(2)
+    expect(doc.getPageCount()).toBe(3)
     for (const p of doc.getPages()) {
       const { width, height } = p.getSize()
       expect(width).toBeCloseTo(595.2756, 3)
@@ -159,6 +161,23 @@ describe('PDF output', () => {
     let lit = 0
     for (let y = 230; y < 420; y++) for (let x = 1150; x < 1600; x++) if (img.at(x, y) > 60) lit++
     expect(lit).toBeGreaterThan(1000)
+  })
+
+  it.skipIf(!hasPoppler)('centres the dashed cut lines exactly on the trim', async () => {
+    const { bytes, sheets } = await build(blackNotebook(), 1, true)
+    const img = render(bytes)
+    const trim = sheets[0].layout.placements[0].trim
+    // In the top margin, the vertical cut line's first (black) dash sits on x = trim.x.
+    const darkCols: number[] = []
+    for (let x = 0; x < 400; x++) if (img.at(x, 10) < 128) darkCols.push(x)
+    expect(darkCols.length).toBeGreaterThan(0)
+    const mid = (Math.min(...darkCols) + Math.max(...darkCols) + 1) / 2
+    expect(Math.abs(mid - trim.x * 10)).toBeLessThanOrEqual(1)
+    // In the left margin, the top cut line sits on y = trim.y.
+    const darkRows: number[] = []
+    for (let y = 0; y < 200; y++) if (img.at(10, y) < 128) darkRows.push(y)
+    const midY = (Math.min(...darkRows) + Math.max(...darkRows) + 1) / 2
+    expect(Math.abs(midY - trim.y * 10)).toBeLessThanOrEqual(1)
   })
 
   it.skipIf(!hasPoppler)('draws the test page’s 100 mm square at true size', async () => {

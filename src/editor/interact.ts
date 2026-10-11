@@ -213,6 +213,7 @@ function textDefaults(at: Pt): TextLayer {
     align: st.textAlign,
     color: st.textColor,
     uppercase: st.uppercase,
+    spans: [],
   }
 }
 

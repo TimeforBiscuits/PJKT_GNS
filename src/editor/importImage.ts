@@ -89,6 +89,7 @@ export const fullBleedLayer = (cover: Cover, asset: Asset): ImageLayer => {
     content: placeContent(asset.width, asset.height, f.w, f.h, 'fill'),
     flipX: false,
     flipY: false,
+    fillLock: true,
   }
 }
 

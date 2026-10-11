@@ -41,6 +41,7 @@ const text = (name: string, x: number, y: number, w: number, t: Partial<TextLaye
   align: 'left',
   color: '#111111',
   uppercase: false,
+  spans: [],
   ...t,
 })
 

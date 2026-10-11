@@ -1,10 +1,9 @@
 import { produce, type Draft } from 'immer'
 import { create } from 'zustand'
 import { newCover, uid, type Cover, type Layer, type Project } from '../model/doc'
+import { dropCover, newSheet, placeCover, refileCover } from '../model/sheets'
 import { reframe } from '../model/geometry'
 import type { FormatId } from '../model/formats'
-import { coversPerSheet } from '../model/imposition'
-import { FORMATS } from '../model/formats'
 
 // The document store: the project, which cover is open, what's selected, and
 // undo history. History holds whole project snapshots — immer shares every
@@ -50,6 +49,8 @@ interface DocState {
   restack: (id: string, to: 'up' | 'down' | 'top' | 'bottom') => void
   /** Replace the whole project (restore or open a file); history starts fresh. */
   loadProject: (project: Project, activeId?: string) => void
+  /** Change a cover's format, moving it onto sheets of that format. */
+  setCoverFormat: (id: string, formatId: FormatId, recipe?: (c: Draft<Cover>) => void) => void
   /** Text frames grow and shrink with their text; not an undoable edit. */
   syncTextHeight: (id: string, h: number) => void
 }
@@ -83,7 +84,7 @@ export const useDoc = create<DocState>((set, get) => {
   }
 
   return {
-    project: { covers: [first], queue: { [first.id]: coversPerSheet(FORMATS.notebook) } },
+    project: { covers: [first], sheets: [newSheet('notebook', first.id)] },
     activeId: first.id,
     selectedId: null,
     contentEdit: false,
@@ -122,7 +123,7 @@ export const useDoc = create<DocState>((set, get) => {
       commit(
         (p) => {
           p.covers.push(cover)
-          p.queue[cover.id] = coversPerSheet(FORMATS[formatId])
+          p.sheets = placeCover(p.sheets, cover)
         },
         { activeId: cover.id, selectedId: null, contentEdit: false },
       )
@@ -138,7 +139,7 @@ export const useDoc = create<DocState>((set, get) => {
       commit(
         (p) => {
           p.covers.splice(p.covers.findIndex((c) => c.id === id) + 1, 0, copy)
-          p.queue[copy.id] = p.queue[id] ?? 1
+          p.sheets = placeCover(p.sheets, copy)
         },
         { activeId: copy.id, selectedId: null, contentEdit: false },
       )
@@ -151,7 +152,7 @@ export const useDoc = create<DocState>((set, get) => {
       commit(
         (p) => {
           p.covers.splice(i, 1)
-          delete p.queue[id]
+          p.sheets = dropCover(p.sheets, id)
         },
         s.activeId === id ? { activeId: next.id, selectedId: null, contentEdit: false } : {},
       )
@@ -189,6 +190,13 @@ export const useDoc = create<DocState>((set, get) => {
         const [l] = c.layers.splice(i, 1)
         const j = to === 'top' ? c.layers.length : to === 'bottom' ? 0 : to === 'up' ? i + 1 : i - 1
         c.layers.splice(Math.max(0, Math.min(c.layers.length, j)), 0, l)
+      }),
+    setCoverFormat: (id, formatId, recipe) =>
+      commit((p) => {
+        const c = findCover(p, id)
+        recipe?.(c)
+        c.formatId = formatId
+        p.sheets = refileCover(p.sheets, c)
       }),
     loadProject: (project, activeId) =>
       set({

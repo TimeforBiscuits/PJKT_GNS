@@ -96,7 +96,7 @@ async function browserDeps(sheets: Sheet[], dpi: number, onImage?: () => void): 
   const want = new Map<string, [string, number]>([['IBM Plex Mono|400', ['IBM Plex Mono', 400]], ['Inter Tight|800', ['Inter Tight', 800]]])
   for (const s of sheets)
     for (const c of s.covers)
-      for (const l of c.layers) if (l.kind === 'text' && !l.hidden) want.set(`${l.family}|${l.weight}`, [l.family, l.weight])
+      for (const l of c?.layers ?? []) if (l.kind === 'text' && !l.hidden) want.set(`${l.family}|${l.weight}`, [l.family, l.weight])
   await Promise.all([...want.values()].map(([f, w]) => loadFont(f, w)))
   const assets = useAssets.getState().assets
   return {
@@ -126,7 +126,7 @@ export async function buildCoversPdf(onProgress?: (msg: string) => void): Promis
   const ed = useEditor.getState()
   const printer = PRINTERS[ed.printerId]
   const sheets = composeSheets(project, printer)
-  if (!sheets.length) throw new Error('Nothing in the print queue — set copies above.')
+  if (!sheets.length) throw new Error('No sheets to print — add a sheet and put covers in its slots.')
   let pics = 0
   onProgress?.('Loading fonts')
   const deps = await browserDeps(sheets, ed.dpi, () => onProgress?.(`Pictures ${++pics}`))
@@ -134,10 +134,10 @@ export async function buildCoversPdf(onProgress?: (msg: string) => void): Promis
   const bytes = await writeSheetsPdf(sheets, deps, {
     marks: ed.marks,
     slug: (i, n, s) =>
-      `//PJKT_GNS · SHEET ${i + 1}/${n} · ${s.covers.length} × ${FORMATS[s.formatId].name.toUpperCase()} ${FORMATS[s.formatId].trim.w}×${FORMATS[s.formatId].trim.h} MM · PRINT AT 100 % · ${printer.name.toUpperCase()}`,
+      `//PJKT_GNS · PAGE ${i + 1}/${n} · ${s.covers.filter(Boolean).length} × ${FORMATS[s.formatId].name.toUpperCase()} ${FORMATS[s.formatId].trim.w}×${FORMATS[s.formatId].trim.h} MM · PRINT AT 100 % · ${printer.name.toUpperCase()}`,
   })
   const file = new File([bytes as BlobPart], `PJKT_GNS-covers-${stamp()}.pdf`, { type: 'application/pdf' })
-  return { file, sheets: sheets.length }
+  return { file, sheets: sheets.reduce((n, s) => n + s.spec.copies, 0) }
 }
 
 export async function buildTestPdf(): Promise<BuiltPdf> {

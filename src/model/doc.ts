@@ -32,6 +32,8 @@ export interface ImageLayer extends LayerBase {
   content: { x: number; y: number; w: number; h: number }
   flipX: boolean
   flipY: boolean
+  /** Keep the picture covering its whole frame while it's moved or scaled (no white gaps). */
+  fillLock: boolean
 }
 
 export type ShapeKind = 'rect' | 'ellipse' | 'polygon' | 'line'
@@ -52,6 +54,14 @@ export interface ShapeLayer extends LayerBase {
 
 export type TextAlign = 'left' | 'center' | 'right'
 
+/** A stretch of characters [start, end) set bold and/or italic. */
+export interface TextSpan {
+  start: number
+  end: number
+  bold?: boolean
+  italic?: boolean
+}
+
 export interface TextLayer extends LayerBase {
   kind: 'text'
   text: string
@@ -64,6 +74,8 @@ export interface TextLayer extends LayerBase {
   align: TextAlign
   color: string
   uppercase: boolean
+  /** Bold/italic words; sorted, non-overlapping. */
+  spans: TextSpan[]
 }
 
 export type Layer = ImageLayer | ShapeLayer | TextLayer
@@ -79,10 +91,18 @@ export interface Cover {
   layers: Layer[]
 }
 
+/** One printed A4 layout: which cover goes in each slot, and how many to print. */
+export interface SheetSpec {
+  id: string
+  formatId: FormatId
+  /** Cover id per slot (top to bottom); null leaves the slot blank. */
+  slots: (string | null)[]
+  copies: number
+}
+
 export interface Project {
   covers: Cover[]
-  /** Copies of each cover to print, by cover id. */
-  queue: Record<string, number>
+  sheets: SheetSpec[]
 }
 
 let counter = 0

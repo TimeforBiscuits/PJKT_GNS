@@ -52,6 +52,8 @@ export interface Mark {
    * cut away, so the mark never shows on the finished cover.
    */
   inBleed: boolean
+  /** Which placement the mark belongs to. */
+  slot: number
 }
 
 export interface SheetLayout {
@@ -138,7 +140,7 @@ export function layoutSheet(format: CoverFormat, opts: LayoutOptions = {}): Shee
   }
 
   const bleedClipped = placements.some((p) => !containsRect(printable, p.bleed))
-  const marks = placements.flatMap((p) => marksFor(p, format, placements, printable))
+  const marks = placements.flatMap((p, slot) => marksFor(p, format, placements, printable).map((m) => ({ ...m, slot })))
   return { sheet, printable, placements, marks, bleedClipped }
 }
 
@@ -159,7 +161,7 @@ function lineMarks(
   kind: MarkKind,
   others: Placement[],
   printable: Rect,
-): Mark[] {
+): Omit<Mark, 'slot'>[] {
   // Work in "along" (direction of the line) and "across" coordinates.
   const along = axis === 'x' ? 'y' : 'x'
   const size = along === 'y' ? 'h' : 'w'
@@ -207,7 +209,7 @@ function lineMarks(
   )
 }
 
-function marksFor(p: Placement, format: CoverFormat, all: Placement[], printable: Rect): Mark[] {
+function marksFor(p: Placement, format: CoverFormat, all: Placement[], printable: Rect): Omit<Mark, 'slot'>[] {
   const t = p.trim
   const fold = foldX(format)
   const marks = [
@@ -239,3 +241,53 @@ export const coverToSheet = (p: Placement, cx: number, cy: number): { x: number;
 
 export const coversPerSheet = (format: CoverFormat, printer: PrinterProfile = DEFAULT_PRINTER): number =>
   layoutSheet(format, { printer }).placements.length
+
+/** Dash length of cut lines, mm. */
+export const CUT_DASH = 2
+
+export interface CutLine {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
+
+/**
+ * Dashed cutting guides: every trim edge of the filled slots, run right
+ * across the sheet so a ruler can be laid along it — except where that would
+ * cross another cover's face.
+ */
+export function cutLines(layout: SheetLayout, filled: boolean[]): CutLine[] {
+  const { sheet } = layout
+  const used = layout.placements.filter((_, i) => filled[i])
+  const eps = 1e-6
+  const xs = [...new Set(used.flatMap((p) => [p.trim.x, p.trim.x + p.trim.w]))]
+  const ys = [...new Set(used.flatMap((p) => [p.trim.y, p.trim.y + p.trim.h]))]
+
+  /** Split [0, len] around the given blocked intervals. */
+  const free = (len: number, blocked: [number, number][]) => {
+    const out: [number, number][] = []
+    let at = 0
+    for (const [a, b] of blocked.sort((m, n) => m[0] - n[0])) {
+      if (a > at) out.push([at, a])
+      at = Math.max(at, b)
+    }
+    if (at < len) out.push([at, len])
+    return out
+  }
+
+  const lines: CutLine[] = []
+  for (const x of xs) {
+    const blocked = used
+      .filter((p) => x > p.trim.x + eps && x < p.trim.x + p.trim.w - eps)
+      .map((p): [number, number] => [p.trim.y, p.trim.y + p.trim.h])
+    for (const [a, b] of free(sheet.h, blocked)) lines.push({ x1: x, y1: a, x2: x, y2: b })
+  }
+  for (const y of ys) {
+    const blocked = used
+      .filter((p) => y > p.trim.y + eps && y < p.trim.y + p.trim.h - eps)
+      .map((p): [number, number] => [p.trim.x, p.trim.x + p.trim.w])
+    for (const [a, b] of free(sheet.w, blocked)) lines.push({ x1: a, y1: y, x2: b, y2: y })
+  }
+  return lines
+}

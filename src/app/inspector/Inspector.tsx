@@ -4,7 +4,7 @@ import { CoversPanel } from './CoversPanel'
 import { DocumentPanel } from './DocumentPanel'
 import { ImagePanel, ImageToolPanel } from './ImagePanel'
 import { LayersPanel } from './LayersPanel'
-import { PrintPanel, QueuePanel } from './PrintPanel'
+import { PrintPanel, SheetsPanel } from './PrintPanel'
 import { ProjectPanel } from './ProjectPanel'
 import { ShapePanel, ShapeToolPanel } from './ShapePanel'
 import { TextPanel, TextToolPanel } from './TextPanel'
@@ -20,7 +20,7 @@ export function Inspector() {
     return (
       <aside className="inspector" aria-label="Inspector">
         <PrintPanel />
-        <QueuePanel />
+        <SheetsPanel />
       </aside>
     )
 

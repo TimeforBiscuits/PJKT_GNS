@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { newCover, uid, type ImageLayer } from '../model/doc'
+import { newSheet } from '../model/sheets'
 import { useAssets } from './assets'
 import { useDoc } from './doc'
 import { readProjectFile, writeProjectFile } from './projectFile'
@@ -34,21 +35,23 @@ describe('.gns project files', () => {
       content: { x: 0, y: -34, w: 284, h: 213 },
       flipX: true,
       flipY: false,
+      fillLock: true,
     }
     cover.layers.push(layer)
     useAssets.getState().replace([asset])
-    useDoc.getState().loadProject({ covers: [cover], queue: { [cover.id]: 3 } })
+    useDoc.getState().loadProject({ covers: [cover], sheets: [{ ...newSheet('square', cover.id), copies: 3 }] })
 
     const file = await writeProjectFile('test')
     expect(file.name).toBe('test.gns')
 
     useAssets.getState().replace([])
-    useDoc.getState().loadProject({ covers: [newCover('notebook', 1)], queue: {} })
+    useDoc.getState().loadProject({ covers: [newCover('notebook', 1)], sheets: [] })
     await readProjectFile(file)
 
     const { project } = useDoc.getState()
     expect(project.covers).toEqual([cover])
-    expect(project.queue[cover.id]).toBe(3)
+    expect(project.sheets[0].copies).toBe(3)
+    expect(project.sheets[0].slots).toEqual([cover.id])
     const back = useAssets.getState().assets[asset.id]
     expect(back.width).toBe(4000)
     expect(new Uint8Array(await back.blob.arrayBuffer())).toEqual(original)

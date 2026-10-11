@@ -1,5 +1,6 @@
 import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate'
 import type { Project } from '../model/doc'
+import { migrateProject } from '../model/sheets'
 import { useAssets, type Asset } from './assets'
 import { useDoc } from './doc'
 import { referencedAssets } from './persist'
@@ -54,7 +55,7 @@ export async function readProjectFile(file: File) {
     return { id: a.id, name: a.name, blob, width: a.width, height: a.height, hasAlpha: a.hasAlpha, preview, previewUrl: URL.createObjectURL(preview) }
   })
   useAssets.getState().replace(assets)
-  useDoc.getState().loadProject(m.project, m.activeId)
+  useDoc.getState().loadProject(migrateProject(m.project), m.activeId)
 }
 
 export const pickProjectFile = () =>
