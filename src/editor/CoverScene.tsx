@@ -1,17 +1,19 @@
 import { BLEED_MM, FORMATS, bleedRect, foldX, panelSize, safeRects } from '../model/formats'
 import type { Rect } from '../model/units'
+import { useActiveCover } from '../store/doc'
 import { useEditor } from '../store/editor'
 import { Caption, DimH, DimV, Hatches } from './annotations'
 import { CoverArt } from './CoverArt'
 import { crisp, mm } from './draw'
+import { ContentGhost, SelectionOverlay } from './Selection'
 import type { ViewInfo } from './Viewport'
 
 /** The cover template: artwork plus non-printing trim, bleed, safe-zone and fold guides. */
-export function CoverScene({ cam }: ViewInfo) {
-  const format = FORMATS[useEditor((s) => s.formatId)]
+export function CoverScene({ cam, size }: ViewInfo) {
+  const cover = useActiveCover()
+  const format = FORMATS[cover.formatId]
   const guides = useEditor((s) => s.guides)
   const trimPreview = useEditor((s) => s.trimPreview)
-  const demo = useEditor((s) => s.demoArt)
 
   const z = cam.zoom
   const sx = (x: number) => cam.x + x * z
@@ -45,8 +47,9 @@ export function CoverScene({ cam }: ViewInfo) {
 
       <g transform={`translate(${cam.x} ${cam.y}) scale(${z})`}>
         <g clipPath="url(#cover-clip)">
-          <CoverArt format={format} demo={demo} />
+          <CoverArt cover={cover} idp="ed" />
         </g>
+        <ContentGhost />
       </g>
 
       {showBleed && (
@@ -122,6 +125,7 @@ export function CoverScene({ cam }: ViewInfo) {
           )}
         </g>
       )}
+      <SelectionOverlay cam={cam} size={size} />
     </g>
   )
 }

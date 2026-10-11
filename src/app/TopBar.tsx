@@ -1,12 +1,16 @@
 import { zoomActual, zoomIn, zoomOut, zoomPercent } from '../editor/camera'
+import { placeContent } from '../editor/importImage'
+import { bleedFrame } from '../model/doc'
 import { FORMATS, FORMAT_IDS, type FormatId } from '../model/formats'
+import { useAssets } from '../store/assets'
+import { useActiveCover, useDoc } from '../store/doc'
 import { useEditor, type ViewId } from '../store/editor'
 import { Key, Led, Segmented } from '../ui/controls'
-import { IconFit, IconMinus, IconPlus, IconPrint, RegMark } from '../ui/icons'
+import { IconFit, IconMinus, IconPlus, IconPrint } from '../ui/icons'
 
 export function TopBar() {
-  const formatId = useEditor((s) => s.formatId)
-  const setFormat = useEditor((s) => s.setFormat)
+  const formatId = useActiveCover().formatId
+  const edit = useDoc((s) => s.edit)
   const view = useEditor((s) => s.view)
   const setView = useEditor((s) => s.setView)
   const zoom = useEditor((s) => s.camera.zoom)
@@ -16,13 +20,30 @@ export function TopBar() {
 
   const pct = zoomPercent(zoom, pxPerMm)
 
+  const setFormat = (id: FormatId) => {
+    const assets = useAssets.getState().assets
+    edit((_, cover) => {
+      const old = bleedFrame(cover)
+      cover.formatId = id
+      const next = bleedFrame(cover)
+      // Full-bleed pictures follow the new size; everything else stays put.
+      for (const l of cover.layers) {
+        const a = l.kind === 'image' ? assets[l.assetId] : undefined
+        if (!a || l.kind !== 'image' || l.rotation !== 0) continue
+        const was = Math.abs(l.x - old.x) + Math.abs(l.y - old.y) + Math.abs(l.w - old.w) + Math.abs(l.h - old.h)
+        if (was > 0.01) continue
+        Object.assign(l, next, { content: placeContent(a.width, a.height, next.w, next.h, 'fill') })
+      }
+    })
+    requestFit()
+  }
+
   return (
     <header className="topbar">
       <div className="brand">
-        <RegMark className="brand-mark" />
         <div className="brand-word">
           <b>
-            PJKT<i>_</i>GNS
+            <i className="slashes">//</i>PJKT<i>_</i>GNS
           </b>
           <small>Project Gans · Cover Studio</small>
         </div>

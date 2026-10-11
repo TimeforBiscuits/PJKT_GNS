@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import type { Rect } from '../model/units'
 import { useEditor, type Camera } from '../store/editor'
 import { clampZoom, zoomAt } from './camera'
+import { useOverlay, type SceneHandlers, type ScenePointer } from './interact'
 import { Rulers, RULER } from './Rulers'
 
 export interface ViewInfo {
@@ -27,6 +28,11 @@ interface GestureEvent extends UIEvent {
 type Drag =
   | { kind: 'pan'; sx: number; sy: number; cam: Camera }
   | { kind: 'pinch'; dist: number; mx: number; my: number; cam: Camera }
+  | { kind: 'scene'; id: number }
+
+/** Two taps this close in time and space make a double tap. */
+const DOUBLE_MS = 350
+const DOUBLE_PX = 12
 
 /**
  * The light table: a pannable, zoomable millimetre space.
@@ -39,10 +45,16 @@ type Drag =
 export function Viewport({
   fitBounds,
   fitPad,
+  handlers,
+  overlay,
   children,
 }: {
   fitBounds: Rect
   fitPad: FitPad
+  /** Clicks and drags that aren't panning or zooming go to the scene. */
+  handlers?: SceneHandlers
+  /** HTML laid over the canvas (drop zones, hints). */
+  overlay?: ReactNode
   children: (v: ViewInfo) => ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -60,6 +72,8 @@ export function Viewport({
   const space = useRef(false)
   const [panning, setPanning] = useState(false)
   const [spaceDown, setSpaceDown] = useState(false)
+  const lastTap = useRef({ t: 0, x: 0, y: 0 })
+  const sceneCursor = useOverlayCursor()
 
   // Latest camera for native listeners registered once.
   const camRef = useRef(cam)
@@ -188,12 +202,24 @@ export function Viewport({
 
   const touchPair = () => [...pointers.current.values()].filter((p) => p.touch).slice(0, 2)
 
+  const scenePointer = (e: React.PointerEvent, p: { x: number; y: number }, taps = 1): ScenePointer => ({
+    world: { x: (p.x - cam.x) / cam.zoom, y: (p.y - cam.y) / cam.zoom },
+    screen: p,
+    shift: e.shiftKey,
+    alt: e.altKey,
+    pointerType: e.pointerType,
+    taps,
+  })
+
   const onPointerDown = (e: React.PointerEvent) => {
+    if (e.button === 2) return
     const p = localPoint(e)
     pointers.current.set(e.pointerId, { ...p, touch: e.pointerType === 'touch' })
     ref.current!.setPointerCapture(e.pointerId)
     const touches = touchPair()
     if (touches.length === 2) {
+      // A second finger turns whatever the first one started into a pinch.
+      if (drag.current?.kind === 'scene') handlers?.cancel()
       const [a, b] = touches
       drag.current = {
         kind: 'pinch',
@@ -207,6 +233,12 @@ export function Viewport({
       e.preventDefault()
       drag.current = { kind: 'pan', sx: p.x, sy: p.y, cam }
       setPanning(true)
+    } else if (handlers && !drag.current) {
+      const last = lastTap.current
+      const now = performance.now()
+      const taps = now - last.t < DOUBLE_MS && Math.hypot(p.x - last.x, p.y - last.y) < DOUBLE_PX ? 2 : 1
+      lastTap.current = taps === 2 ? { t: 0, x: 0, y: 0 } : { t: now, x: p.x, y: p.y }
+      if (handlers.down(scenePointer(e, p, taps))) drag.current = { kind: 'scene', id: e.pointerId }
     }
   }
 
@@ -216,11 +248,16 @@ export function Viewport({
       setCursor({ x: (p.x - cam.x) / cam.zoom, y: (p.y - cam.y) / cam.zoom })
     }
     const tracked = pointers.current.get(e.pointerId)
-    if (!tracked) return
+    if (!tracked) {
+      if (!drag.current && e.pointerType !== 'touch') handlers?.hover?.(scenePointer(e, p))
+      return
+    }
     tracked.x = p.x
     tracked.y = p.y
     const d = drag.current
-    if (d?.kind === 'pan') {
+    if (d?.kind === 'scene') {
+      if (d.id === e.pointerId) handlers?.move(scenePointer(e, p))
+    } else if (d?.kind === 'pan') {
       setCamera({ ...d.cam, x: d.cam.x + p.x - d.sx, y: d.cam.y + p.y - d.sy })
     } else if (d?.kind === 'pinch') {
       const [a, b] = touchPair()
@@ -239,6 +276,11 @@ export function Viewport({
   const endPointer = (e: React.PointerEvent) => {
     pointers.current.delete(e.pointerId)
     const d = drag.current
+    if (d?.kind === 'scene' && d.id === e.pointerId) {
+      drag.current = null
+      if (e.type === 'pointercancel') handlers?.cancel()
+      else handlers?.up(scenePointer(e, localPoint(e)))
+    }
     if (d?.kind === 'pinch' && touchPair().length < 2) drag.current = null
     if (d?.kind === 'pan') drag.current = null
     if (!drag.current) setPanning(false)
@@ -247,6 +289,7 @@ export function Viewport({
   const cls = ['workspace']
   if (panning) cls.push('workspace--panning')
   else if (tool === 'hand' || spaceDown) cls.push('workspace--hand')
+  else if (tool !== 'select') cls.push('workspace--draw')
 
   return (
     <div
@@ -260,6 +303,7 @@ export function Viewport({
         if (e.pointerType === 'mouse') setCursor(null)
       }}
       onContextMenu={(e) => e.preventDefault()}
+      style={sceneCursor && !panning && tool === 'select' && !spaceDown ? { cursor: sceneCursor } : undefined}
     >
       {size.w > 0 && (
         <svg width={size.w} height={size.h}>
@@ -268,6 +312,7 @@ export function Viewport({
           {rulers && <Rulers cam={cam} size={size} />}
         </svg>
       )}
+      {overlay}
     </div>
   )
 }
@@ -299,3 +344,5 @@ function MatGrid({ cam, size }: ViewInfo) {
     </g>
   )
 }
+
+const useOverlayCursor = () => useOverlay((s) => s.cursor)

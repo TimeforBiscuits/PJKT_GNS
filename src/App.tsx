@@ -1,11 +1,13 @@
 import { CalibrateDialog } from './app/CalibrateDialog'
-import { Inspector } from './app/Inspector'
+import { Inspector } from './app/inspector/Inspector'
 import { StatusBar } from './app/StatusBar'
 import { ToolRail } from './app/ToolRail'
 import { TopBar } from './app/TopBar'
 import { useShortcuts } from './app/shortcuts'
 import { CoverScene } from './editor/CoverScene'
-import { COVER_FIT_PAD, SHEET_FIT_BOUNDS, SHEET_FIT_PAD, coverFitBounds } from './editor/scenes'
+import { DropZone } from './editor/DropZone'
+import { coverHandlers } from './editor/interact'
+import { COVER_FIT_PAD, SHEET_FIT_BOUNDS, SHEET_FIT_PAD, useCoverFitBounds } from './editor/scenes'
 import { SheetScene } from './editor/SheetScene'
 import { Viewport } from './editor/Viewport'
 import { useEditor } from './store/editor'
@@ -13,7 +15,7 @@ import { useEditor } from './store/editor'
 export default function App() {
   useShortcuts()
   const view = useEditor((s) => s.view)
-  const formatId = useEditor((s) => s.formatId)
+  const coverBounds = useCoverFitBounds()
   const calibrating = useEditor((s) => s.calibrating)
 
   return (
@@ -23,7 +25,7 @@ export default function App() {
         <ToolRail />
         <main style={{ position: 'relative', minWidth: 0, minHeight: 0, display: 'grid' }}>
           {view === 'cover' ? (
-            <Viewport key="cover" fitBounds={coverFitBounds(formatId)} fitPad={COVER_FIT_PAD}>
+            <Viewport key="cover" fitBounds={coverBounds} fitPad={COVER_FIT_PAD} handlers={coverHandlers} overlay={<DropZone />}>
               {(v) => <CoverScene {...v} />}
             </Viewport>
           ) : (
@@ -43,10 +45,8 @@ export default function App() {
 
 function Legend() {
   const view = useEditor((s) => s.view)
-  const demo = useEditor((s) => s.demoArt)
   return (
     <div className="view-badge">
-      {demo && <span className="tag" style={{ color: 'var(--signal)' }}>Demo art</span>}
       <span className="tag">
         <span className="swatch" style={{ background: 'var(--guide-trim)' }} />
         Trim

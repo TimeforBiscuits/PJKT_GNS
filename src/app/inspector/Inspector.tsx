@@ -1,0 +1,48 @@
+import { useDoc, useSelectedLayer } from '../../store/doc'
+import { useEditor } from '../../store/editor'
+import { CoversPanel } from './CoversPanel'
+import { DocumentPanel } from './DocumentPanel'
+import { ImagePanel, ImageToolPanel } from './ImagePanel'
+import { LayersPanel } from './LayersPanel'
+import { PrintPanel, QueuePanel } from './PrintPanel'
+import { ShapePanel, ShapeToolPanel } from './ShapePanel'
+import { TextPanel, TextToolPanel } from './TextPanel'
+import { TransformPanel } from './TransformPanel'
+
+export function Inspector() {
+  const view = useEditor((s) => s.view)
+  const tool = useEditor((s) => s.tool)
+  const layer = useSelectedLayer()
+  const selectedId = useDoc((s) => s.selectedId)
+
+  if (view === 'sheet')
+    return (
+      <aside className="inspector" aria-label="Inspector">
+        <PrintPanel />
+        <QueuePanel />
+      </aside>
+    )
+
+  const drawing = tool === 'rect' || tool === 'ellipse' || tool === 'polygon' || tool === 'line'
+  return (
+    <aside className="inspector" aria-label="Inspector">
+      <CoversPanel />
+      {layer ? (
+        <>
+          <TransformPanel key={`t-${selectedId}`} layer={layer} />
+          {layer.kind === 'image' && <ImagePanel layer={layer} />}
+          {layer.kind === 'shape' && <ShapePanel layer={layer} />}
+          {layer.kind === 'text' && <TextPanel layer={layer} />}
+        </>
+      ) : (
+        <>
+          {tool === 'image' && <ImageToolPanel />}
+          {drawing && <ShapeToolPanel />}
+          {tool === 'text' && <TextToolPanel />}
+          <DocumentPanel />
+        </>
+      )}
+      <LayersPanel />
+    </aside>
+  )
+}

@@ -15,6 +15,7 @@
   "dependencies": {
     "@fontsource-variable/archivo": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
+    "immer": "^11.1.21",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zustand": "^5.0.15"
@@ -29,5 +30,5 @@
     "vite": "^8.3.0",
     "vitest": "^5.0.3"
   },
-  "description": "Project Gans \u2014 a print-accurate notebook cover studio"
+  "description": "Project Gans — a print-accurate notebook cover studio"
 }

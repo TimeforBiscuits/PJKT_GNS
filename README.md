@@ -40,11 +40,11 @@ white edge.
   - Zoom and pan (trackpad, mouse, touch)
   - A4 sheet preview with crop marks
   - Real-size screen calibration
-- [ ] **2 · Images:**
+- [x] **2 · Images:**
   - Import and full-bleed placement
   - Drag inside the frame, crop, rotate and flip
   - Live effective-PPI meter
-- [ ] **3 · Shapes:**
+- [x] **3 · Shapes:**
   - Rectangle, ellipse, polygon and line
   - Fill, or hollow with stroke weight and alignment
   - Layers, snapping, undo

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { FormatId } from '../model/formats'
+import type { LineCap, StrokeAlign } from '../model/doc'
 import { CSS_PX_PER_MM } from '../model/units'
 
 export type ToolId = 'select' | 'image' | 'rect' | 'ellipse' | 'polygon' | 'line' | 'text' | 'hand'
@@ -22,8 +22,6 @@ export interface Camera {
   y: number
 }
 
-export type StrokeAlign = 'inside' | 'center' | 'outside'
-
 /** Defaults the shape and text tools will draw with. */
 export interface ToolStyle {
   fill: string | null
@@ -36,6 +34,9 @@ export interface ToolStyle {
   leadingPt: number
   /** Letter spacing in thousandths of an em, as in InDesign. */
   tracking: number
+  sides: number
+  radius: number
+  cap: LineCap
 }
 
 const CALIBRATION_KEY = 'pjkt_gns.pxPerMm'
@@ -50,7 +51,6 @@ const loadCalibration = (): number | null => {
 }
 
 interface EditorState {
-  formatId: FormatId
   view: ViewId
   tool: ToolId
   guides: Guides
@@ -67,13 +67,14 @@ interface EditorState {
   cursor: { x: number; y: number } | null
   style: ToolStyle
   calibrating: boolean
-  /** Placeholder artwork shown until real layers exist. */
-  demoArt: boolean
   printerId: string
   dpi: 300 | 600
+  /** Bumped to move keyboard focus into the text box of the selected text layer. */
+  textFocus: number
+  /** A short status message, e.g. an import error. */
+  message: { text: string; at: number } | null
   marks: { crop: boolean; fold: boolean }
 
-  setFormat: (id: FormatId) => void
   setView: (v: ViewId) => void
   setTool: (t: ToolId) => void
   toggleGuide: (g: keyof Guides) => void
@@ -85,14 +86,14 @@ interface EditorState {
   setStyle: (patch: Partial<ToolStyle>) => void
   setCalibrating: (on: boolean) => void
   setPxPerMm: (v: number | null) => void
-  setDemoArt: (on: boolean) => void
   setPrinter: (id: string) => void
   setDpi: (dpi: 300 | 600) => void
   toggleMark: (m: 'crop' | 'fold') => void
+  focusText: () => void
+  flash: (text: string) => void
 }
 
 export const useEditor = create<EditorState>((set) => ({
-  formatId: 'notebook',
   view: 'cover',
   tool: 'select',
   guides: { bleed: true, safe: true, fold: true, rulers: true, dims: true },
@@ -105,21 +106,24 @@ export const useEditor = create<EditorState>((set) => ({
   style: {
     fill: '#111111',
     stroke: null,
-    strokeWidthPt: 4,
+    strokeWidthPt: 6,
     strokeAlign: 'inside',
     fontFamily: 'Inter Tight',
     fontWeight: 800,
     fontSizePt: 36,
     leadingPt: 34,
     tracking: -20,
+    sides: 3,
+    radius: 0,
+    cap: 'butt',
   },
   calibrating: false,
-  demoArt: true,
   printerId: 'pixma',
   dpi: 600,
   marks: { crop: true, fold: true },
+  textFocus: 0,
+  message: null,
 
-  setFormat: (formatId) => set((s) => ({ formatId, fitRequest: s.fitRequest + 1 })),
   setView: (view) => set((s) => ({ view, fitRequest: s.fitRequest + 1 })),
   setTool: (tool) => set({ tool }),
   toggleGuide: (g) => set((s) => ({ guides: { ...s.guides, [g]: !s.guides[g] } })),
@@ -139,10 +143,11 @@ export const useEditor = create<EditorState>((set) => ({
     }
     set({ pxPerMm })
   },
-  setDemoArt: (demoArt) => set({ demoArt }),
   setPrinter: (printerId) => set({ printerId }),
   setDpi: (dpi) => set({ dpi }),
   toggleMark: (m) => set((s) => ({ marks: { ...s.marks, [m]: !s.marks[m] } })),
+  focusText: () => set((s) => ({ textFocus: s.textFocus + 1 })),
+  flash: (text) => set({ message: { text, at: Date.now() } }),
 }))
 
 /** Pixels per mm that count as 100 % — real size once calibrated. */

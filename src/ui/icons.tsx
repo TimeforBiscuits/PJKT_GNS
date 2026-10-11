@@ -93,12 +93,3 @@ export const IconPrint = () => (
     <path d="M9.5 17.5 H14.5" strokeWidth={1.5} />
   </Svg>
 )
-
-/** Registration target used as the brand mark. */
-export const RegMark = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 26 26" aria-hidden="true">
-    <circle cx="13" cy="13" r="7.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-    <path d="M13 0 V26 M0 13 H26" stroke="currentColor" strokeWidth="1.6" />
-    <circle cx="13" cy="13" r="3.6" fill="#ff4f00" />
-  </svg>
-)
