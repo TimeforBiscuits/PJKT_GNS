@@ -1,0 +1,43 @@
+name: Check & deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+      # GitHub Pages serves the gh-pages branch at
+      # https://timeforbiscuits.github.io/PJKT_GNS/
+      - name: Publish to gh-pages
+        if: github.event_name != 'pull_request'
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
