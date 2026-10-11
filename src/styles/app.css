@@ -1275,6 +1275,15 @@ input[type='range'].slider::-moz-range-thumb {
   font-weight: 600;
 }
 
+.msg--info {
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+
+.msg--info b {
+  color: #0a7d6f;
+}
+
 .dropzone {
   position: absolute;
   inset: 10px;

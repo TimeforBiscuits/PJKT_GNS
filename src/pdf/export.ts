@@ -7,6 +7,7 @@ import { fontSync, loadFont } from '../fonts/registry'
 import { useAssets, type Asset } from '../store/assets'
 import { useDoc } from '../store/doc'
 import { useEditor } from '../store/editor'
+import { stamp } from '../app/files'
 import { writeSheetsPdf, writeTestPagePdf, type PlacedImage, type WriterDeps } from './writer'
 
 /** iPad Safari refuses canvases over 16.7 megapixels. */
@@ -114,12 +115,6 @@ async function browserDeps(sheets: Sheet[], dpi: number, onImage?: () => void): 
   }
 }
 
-const stamp = () => {
-  const d = new Date()
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`
-}
-
 export interface BuiltPdf {
   file: File
   sheets: number
@@ -149,41 +144,6 @@ export async function buildTestPdf(): Promise<BuiltPdf> {
   const deps = await browserDeps([], 300)
   const bytes = await writeTestPagePdf(deps)
   return { file: new File([bytes as BlobPart], 'PJKT_GNS-printer-test.pdf', { type: 'application/pdf' }), sheets: 1 }
-}
-
-interface SaveFilePickerWindow {
-  showSaveFilePicker?: (opts: unknown) => Promise<{ createWritable: () => Promise<{ write: (d: Blob) => Promise<void>; close: () => Promise<void> }> }>
-}
-
-/** Chrome and Edge can ask where to save before the PDF is built. */
-export const canPickSaveLocation = () => typeof (window as SaveFilePickerWindow).showSaveFilePicker === 'function'
-
-export async function pickSaveLocation(name: string) {
-  return (window as SaveFilePickerWindow).showSaveFilePicker!({
-    suggestedName: name,
-    types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
-  })
-}
-
-/** Hand a finished PDF to the user: the share sheet on iPad (Save to Files), a download elsewhere. */
-export async function deliver(file: File) {
-  const touch = navigator.maxTouchPoints > 1
-  if (touch && navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: file.name })
-      return
-    } catch (e) {
-      if ((e as Error).name === 'AbortError') return
-    }
-  }
-  const url = URL.createObjectURL(file)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = file.name
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
 
 export const coverFileName = () => `PJKT_GNS-covers-${stamp()}.pdf`

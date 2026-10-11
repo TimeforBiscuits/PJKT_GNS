@@ -24,7 +24,7 @@ const useRecentMessage = () => {
     const t = setTimeout(() => setNow(Date.now()), 4500)
     return () => clearTimeout(t)
   }, [message])
-  return message && now - message.at < 4500 ? message.text : null
+  return message && now - message.at < 4500 ? message : null
 }
 
 const coord = (v: number) => (v < 0 ? '−' : ' ') + Math.abs(v).toFixed(1).padStart(5, '0')
@@ -55,8 +55,8 @@ export function StatusBar() {
         <span className="unit">mm</span>
       </span>
       {message ? (
-        <span className="msg msg--alert" role="status">
-          <b>!</b> {message}
+        <span className={message.tone === 'alert' ? 'msg msg--alert' : 'msg msg--info'} role="status">
+          <b>{message.tone === 'alert' ? '!' : '✓'}</b> {message.text}
         </span>
       ) : (
         <span className="msg">

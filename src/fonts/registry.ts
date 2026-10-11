@@ -92,3 +92,6 @@ export function cssFamily(e: FontEntry, weight: number): string {
   }
   return `'${name}'`
 }
+
+/** Every font file in the library, for offline caching. */
+export const allFontUrls = () => CATALOG.flatMap((e) => e.weights.map((w) => fontUrl(e, w)))

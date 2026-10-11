@@ -74,8 +74,10 @@ interface EditorState {
   dpi: 300 | 600
   /** Set to move keyboard focus into the text box of the selected text layer. */
   textFocus: boolean
+  /** When autosave last wrote the project. */
+  savedAt: number | null
   /** A short status message, e.g. an import error. */
-  message: { text: string; at: number } | null
+  message: { text: string; at: number; tone: 'info' | 'alert' } | null
   marks: { crop: boolean; fold: boolean }
 
   setView: (v: ViewId) => void
@@ -94,7 +96,8 @@ interface EditorState {
   toggleMark: (m: 'crop' | 'fold') => void
   focusText: () => void
   textFocused: () => void
-  flash: (text: string) => void
+  flash: (text: string, tone?: 'info' | 'alert') => void
+  setSavedAt: (t: number) => void
 }
 
 export const useEditor = create<EditorState>((set) => ({
@@ -130,6 +133,7 @@ export const useEditor = create<EditorState>((set) => ({
   marks: { crop: true, fold: true },
   textFocus: false,
   message: null,
+  savedAt: null,
 
   setView: (view) => set((s) => ({ view, fitRequest: s.fitRequest + 1 })),
   setTool: (tool) => set({ tool }),
@@ -155,7 +159,8 @@ export const useEditor = create<EditorState>((set) => ({
   toggleMark: (m) => set((s) => ({ marks: { ...s.marks, [m]: !s.marks[m] } })),
   focusText: () => set({ textFocus: true }),
   textFocused: () => set({ textFocus: false }),
-  flash: (text) => set({ message: { text, at: Date.now() } }),
+  flash: (text, tone = 'alert') => set({ message: { text, at: Date.now(), tone } }),
+  setSavedAt: (savedAt) => set({ savedAt }),
 }))
 
 /** Pixels per mm that count as 100 % — real size once calibrated. */

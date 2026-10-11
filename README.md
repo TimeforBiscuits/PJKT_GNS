@@ -21,6 +21,18 @@ The left panel is the back cover and the right panel is the front cover.
 Artwork runs 2 mm past the trim (bleed) so hand-cutting never leaves a
 white edge.
 
+## Using it on each device
+
+- **Windows 11 and Mac:** open the link in Chrome or Edge, or Safari on the
+  Mac. In Chrome or Edge, *Export PDF* asks where to save.
+- **iPad:** open the link in Safari, then *Share → Add to Home Screen*. It
+  then runs full-screen, works offline, and keeps its saved work. *Export PDF*
+  opens the share sheet; choose *Save to Files* to pick a folder.
+- Work saves itself in the browser. Use *Save file* (a `.gns` project) to
+  move work between devices or keep a backup.
+- For true 1:1 on screen, press *Cal* once per device and match a bank
+  card.
+
 ## Printing
 
 - Every PDF page is exactly A4 portrait (210 × 297 mm). Covers that only fit
@@ -29,6 +41,8 @@ white edge.
   mode enlarges the page, which throws off the measurements.
 - Crop marks go in the side margins. Where the printer can't reach the edge
   of the sheet, short cut ticks sit inside the bleed that gets trimmed away.
+- Print the *Printer test page* once: the square must measure 100.0 mm, and
+  the edge gauges show where your printer stops printing.
 
 ## Roadmap
 
@@ -56,7 +70,7 @@ white edge.
   - Sheet composer
   - 300/600 dpi vector PDF export
   - Calibration test page
-- [ ] **6 · Storage:** autosave, `.gns` project files, offline install
+- [x] **6 · Storage:** autosave, `.gns` project files, offline install
 - [ ] **7 · Cross-device polish**
 
 ## Development

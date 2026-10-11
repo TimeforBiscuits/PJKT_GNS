@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { buildCoversPdf, buildTestPdf, canPickSaveLocation, coverFileName, deliver, pickSaveLocation } from '../../pdf/export'
+import { buildCoversPdf, buildTestPdf, coverFileName } from '../../pdf/export'
+import { canPickSaveLocation, deliver, pickSaveLocation, writeTo, type Writable } from '../files'
 import { Key } from '../../ui/controls'
 import { IconPrint } from '../../ui/icons'
 
@@ -20,10 +21,12 @@ export function ExportControls() {
   const run = async (kind: 'covers' | 'test') => {
     // Chrome and Edge ask where to save first, while the click still counts as
     // a user gesture; other browsers hand over the finished file afterwards.
-    let handle: Awaited<ReturnType<typeof pickSaveLocation>> | null = null
+    let handle: Writable | null = null
     if (canPickSaveLocation()) {
       try {
-        handle = await pickSaveLocation(kind === 'covers' ? coverFileName() : 'PJKT_GNS-printer-test.pdf')
+        handle = await pickSaveLocation(kind === 'covers' ? coverFileName() : 'PJKT_GNS-printer-test.pdf', 'PDF', {
+          'application/pdf': ['.pdf'],
+        })
       } catch (e) {
         if ((e as Error).name === 'AbortError') return
       }
@@ -32,9 +35,7 @@ export function ExportControls() {
     try {
       const built = kind === 'covers' ? await buildCoversPdf((msg) => setState({ phase: 'busy', msg })) : await buildTestPdf()
       if (handle) {
-        const out = await handle.createWritable()
-        await out.write(built.file)
-        await out.close()
+        await writeTo(handle, built.file)
         setState({ phase: 'done', msg: `Saved · ${built.sheets} sheet${built.sheets === 1 ? '' : 's'} · ${mb(built.file.size)}` })
       } else setState({ phase: 'ready', file: built.file })
     } catch (e) {

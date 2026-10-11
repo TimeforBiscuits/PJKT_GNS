@@ -58,6 +58,7 @@ export async function readImage(file: File): Promise<Asset> {
       width,
       height,
       hasAlpha,
+      preview,
       previewUrl: URL.createObjectURL(preview),
     }
   } finally {

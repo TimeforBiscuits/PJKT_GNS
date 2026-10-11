@@ -48,6 +48,8 @@ interface DocState {
   removeLayer: (id: string) => void
   duplicateLayer: (id: string) => void
   restack: (id: string, to: 'up' | 'down' | 'top' | 'bottom') => void
+  /** Replace the whole project (restore or open a file); history starts fresh. */
+  loadProject: (project: Project, activeId?: string) => void
   /** Text frames grow and shrink with their text; not an undoable edit. */
   syncTextHeight: (id: string, h: number) => void
 }
@@ -187,6 +189,16 @@ export const useDoc = create<DocState>((set, get) => {
         const [l] = c.layers.splice(i, 1)
         const j = to === 'top' ? c.layers.length : to === 'bottom' ? 0 : to === 'up' ? i + 1 : i - 1
         c.layers.splice(Math.max(0, Math.min(c.layers.length, j)), 0, l)
+      }),
+    loadProject: (project, activeId) =>
+      set({
+        project,
+        activeId: activeId && project.covers.some((c) => c.id === activeId) ? activeId : project.covers[0].id,
+        selectedId: null,
+        contentEdit: false,
+        past: [],
+        future: [],
+        pending: null,
       }),
     syncTextHeight: (id, h) =>
       set((s) => {

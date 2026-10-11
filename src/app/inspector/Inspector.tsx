@@ -5,6 +5,7 @@ import { DocumentPanel } from './DocumentPanel'
 import { ImagePanel, ImageToolPanel } from './ImagePanel'
 import { LayersPanel } from './LayersPanel'
 import { PrintPanel, QueuePanel } from './PrintPanel'
+import { ProjectPanel } from './ProjectPanel'
 import { ShapePanel, ShapeToolPanel } from './ShapePanel'
 import { TextPanel, TextToolPanel } from './TextPanel'
 import { TransformPanel } from './TransformPanel'
@@ -43,6 +44,7 @@ export function Inspector() {
         </>
       )}
       <LayersPanel />
+      {!layer && <ProjectPanel />}
     </aside>
   )
 }
