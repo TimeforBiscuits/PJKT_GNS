@@ -5,7 +5,7 @@ import { PRINTERS } from '../../model/imposition'
 import { useDoc } from '../../store/doc'
 import { useEditor } from '../../store/editor'
 import { Key, Panel, Segmented, Toggle } from '../../ui/controls'
-import { IconPrint } from '../../ui/icons'
+import { ExportControls } from './ExportControls'
 
 export function PrintPanel() {
   const printerId = useEditor((s) => s.printerId)
@@ -81,10 +81,7 @@ export function PrintPanel() {
         </span>
       </div>
 
-      <Key variant="signal" disabled>
-        <IconPrint />
-        Export PDF
-      </Key>
+      <ExportControls />
     </Panel>
   )
 }

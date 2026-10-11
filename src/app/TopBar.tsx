@@ -2,6 +2,7 @@ import { zoomActual, zoomIn, zoomOut, zoomPercent } from '../editor/camera'
 import { placeContent } from '../editor/importImage'
 import { bleedFrame } from '../model/doc'
 import { FORMATS, FORMAT_IDS, type FormatId } from '../model/formats'
+import { coversPerSheet } from '../model/imposition'
 import { useAssets } from '../store/assets'
 import { useActiveCover, useDoc } from '../store/doc'
 import { useEditor, type ViewId } from '../store/editor'
@@ -22,8 +23,10 @@ export function TopBar() {
 
   const setFormat = (id: FormatId) => {
     const assets = useAssets.getState().assets
-    edit((_, cover) => {
+    edit((p, cover) => {
       const old = bleedFrame(cover)
+      // A cover still on its default copy count follows the new format's sheet.
+      if (p.queue[cover.id] === coversPerSheet(FORMATS[cover.formatId])) p.queue[cover.id] = coversPerSheet(FORMATS[id])
       cover.formatId = id
       const next = bleedFrame(cover)
       // Full-bleed pictures follow the new size; everything else stays put.

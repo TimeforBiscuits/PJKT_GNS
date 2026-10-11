@@ -1372,3 +1372,20 @@ textarea.text-input:focus {
   font-size: 18px;
   line-height: 1.15;
 }
+
+.export {
+  display: grid;
+  gap: 8px;
+}
+
+.export .lcd {
+  font-size: 11px;
+  white-space: normal;
+  line-height: 1.35;
+  padding: 6px 8px;
+}
+
+.lcd--warn {
+  color: #ff6b4f;
+  text-shadow: none;
+}

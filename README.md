@@ -52,7 +52,7 @@ white edge.
   - Built-in library of bold sans faces
   - Size, leading and tracking
   - Text converted to outlines for exact output
-- [ ] **5 · Print:**
+- [x] **5 · Print:**
   - Sheet composer
   - 300/600 dpi vector PDF export
   - Calibration test page

@@ -32,8 +32,9 @@ export function useShortcuts() {
         else if (key === '=' || key === '+') zoomIn()
         else if (key === '-') zoomOut()
         else if (key === 'd' && sel) doc.duplicateLayer(sel.id)
-        else if (key === ']' && sel) doc.restack(sel.id, e.shiftKey ? 'top' : 'up')
-        else if (key === '[' && sel) doc.restack(sel.id, e.shiftKey ? 'bottom' : 'down')
+        // By key position: Shift turns [ and ] into { and } on most layouts.
+        else if (e.code === 'BracketRight' && sel) doc.restack(sel.id, e.shiftKey ? 'top' : 'up')
+        else if (e.code === 'BracketLeft' && sel) doc.restack(sel.id, e.shiftKey ? 'bottom' : 'down')
         else return
         e.preventDefault()
         return
