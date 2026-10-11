@@ -1496,3 +1496,47 @@ textarea.text-input:focus {
   min-width: 52px;
   align-content: center;
 }
+
+/* ───────────────────────── rich text ───────────────────────── */
+
+.rich-text {
+  min-height: 84px;
+  max-height: 220px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  outline: none;
+  font-weight: 400;
+}
+
+.rich-text:focus {
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+}
+
+.style-keys {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.style-key {
+  width: 40px;
+  font-size: 15px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.style-key b {
+  font-weight: 900;
+}
+
+.style-key i {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+}
+
+.style-keys .note {
+  font-size: 9.5px;
+  line-height: 1.3;
+}

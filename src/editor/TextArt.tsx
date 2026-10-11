@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { useFont } from '../fonts/registry'
+import { useFaces } from '../fonts/registry'
 import type { TextLayer } from '../model/doc'
 import { toSvgD } from '../model/path'
 import { layoutText } from '../model/text'
@@ -7,11 +7,11 @@ import { useDoc } from '../store/doc'
 
 /** A text layer as outlines, set by the same engine that writes the PDF. */
 export function TextArt({ layer }: { layer: TextLayer }) {
-  const font = useFont(layer.family, layer.weight)
-  const { text, sizePt, leadingPt, tracking, align, uppercase, w } = layer
+  const faces = useFaces(layer)
+  const { text, spans, sizePt, leadingPt, tracking, align, uppercase, w } = layer
   const layout = useMemo(
-    () => (font ? layoutText(font, { text, sizePt, leadingPt, tracking, align, uppercase, w }) : null),
-    [font, text, sizePt, leadingPt, tracking, align, uppercase, w],
+    () => (faces ? layoutText(faces, { text, spans, sizePt, leadingPt, tracking, align, uppercase, w }) : null),
+    [faces, text, spans, sizePt, leadingPt, tracking, align, uppercase, w],
   )
   const syncTextHeight = useDoc((s) => s.syncTextHeight)
   useEffect(() => {
@@ -19,5 +19,12 @@ export function TextArt({ layer }: { layer: TextLayer }) {
   }, [layout, layer.id, syncTextHeight])
 
   if (!layout) return <rect width={layer.w} height={layer.h} fill={layer.color} opacity={0.08} />
-  return <path d={toSvgD(layout.path)} fill={layer.color} />
+  return (
+    <>
+      <path d={toSvgD(layout.path)} fill={layer.color} />
+      {layout.stroke && (
+        <path d={toSvgD(layout.stroke.path)} fill="none" stroke={layer.color} strokeWidth={layout.stroke.width} strokeLinejoin="round" />
+      )}
+    </>
+  )
 }

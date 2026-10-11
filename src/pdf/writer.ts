@@ -35,6 +35,7 @@ import { frameMatrix, mul, rotate, translate, type Box, type Mat } from '../mode
 import { CUT_DASH, type CutLine, type Mark, type Placement } from '../model/imposition'
 import { isClosed, rectPath, shapePath, type Path } from '../model/path'
 import { layoutText, type ShapingFont } from '../model/text'
+import { facesFor } from '../fonts/variants'
 import { A4, mmToPt, ptToMm } from '../model/units'
 
 // The PDF writer. Every page is exactly A4 (595.276 × 841.890 pt). The page
@@ -51,8 +52,8 @@ export interface PlacedImage {
 }
 
 export interface WriterDeps {
-  /** A loaded font for the family and weight. */
-  font: (family: string, weight: number) => ShapingFont
+  /** A loaded font for the family and weight (upright unless italic). */
+  font: (family: string, weight: number, italic?: boolean) => ShapingFont
   /** Pixels for a picture layer, cropped to what shows and resampled. */
   image: (layer: ImageLayer) => Promise<PlacedImage | null>
 }
@@ -190,10 +191,21 @@ class PageWriter {
   }
 
   text(t: TextLayer): PDFOperator[] {
-    const font = this.deps.font(t.family, t.weight)
-    const { path } = layoutText(font, t)
+    const faces = facesFor(t, (f) => this.deps.font(f.entry.family, f.weight, f.italic))!
+    const { path, stroke: bold } = layoutText(faces, t)
     if (!path.length) return []
-    return [setFillingRgbColor(...hexRgb(t.color)), ...pathOps(path), fill()]
+    const ops = [setFillingRgbColor(...hexRgb(t.color)), ...pathOps(path), fill()]
+    if (bold) {
+      // Synthetic bold: thicken the outlines with a stroke in the same colour.
+      ops.push(
+        setStrokingRgbColor(...hexRgb(t.color)),
+        setLineWidth(bold.width),
+        setLineJoin(LineJoinStyle.Round),
+        ...pathOps(bold.path),
+        stroke(),
+      )
+    }
+    return ops
   }
 
   async image(l: ImageLayer): Promise<PDFOperator[]> {

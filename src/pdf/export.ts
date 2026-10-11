@@ -3,7 +3,7 @@ import type { ImageLayer } from '../model/doc'
 import { FORMATS } from '../model/formats'
 import { PRINTERS } from '../model/imposition'
 import { MM_PER_INCH } from '../model/units'
-import { fontSync, loadFont } from '../fonts/registry'
+import { fileSync, fontEntry, fontSync, loadFont, loadTextFonts } from '../fonts/registry'
 import { useAssets, type Asset } from '../store/assets'
 import { useDoc } from '../store/doc'
 import { useEditor } from '../store/editor'
@@ -93,16 +93,16 @@ export async function rasterize(layer: ImageLayer, asset: Asset, dpi: number): P
 }
 
 async function browserDeps(sheets: Sheet[], dpi: number, onImage?: () => void): Promise<WriterDeps> {
-  const want = new Map<string, [string, number]>([['IBM Plex Mono|400', ['IBM Plex Mono', 400]], ['Inter Tight|800', ['Inter Tight', 800]]])
+  const loads: Promise<unknown>[] = [loadFont('IBM Plex Mono', 400), loadFont('Inter Tight', 800)]
   for (const s of sheets)
-    for (const c of s.covers)
-      for (const l of c?.layers ?? []) if (l.kind === 'text' && !l.hidden) want.set(`${l.family}|${l.weight}`, [l.family, l.weight])
-  await Promise.all([...want.values()].map(([f, w]) => loadFont(f, w)))
+    for (const c of s.covers) for (const l of c?.layers ?? []) if (l.kind === 'text' && !l.hidden) loads.push(loadTextFonts(l))
+  await Promise.all(loads)
   const assets = useAssets.getState().assets
   return {
-    font: (family, weight) => {
-      const f = fontSync(family, weight)
-      if (!f) throw new Error(`Font ${family} ${weight} did not load.`)
+    font: (family, weight, italic = false) => {
+      const entry = fontEntry(family)
+      const f = italic ? fileSync({ entry, weight, italic }) : fontSync(family, weight)
+      if (!f) throw new Error(`Font ${family} ${weight}${italic ? ' italic' : ''} did not load.`)
       return f
     },
     image: async (layer) => {

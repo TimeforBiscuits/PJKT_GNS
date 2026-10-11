@@ -3,9 +3,9 @@
 // after editing src/fonts/families.json; the output is committed so builds
 // need no network.
 //
-// Only Latin subsets of the regular (upright) styles are taken — they cover
-// English, Italian and the rest of Western Europe, plus typographic quotes,
-// dashes and €.
+// Only Latin subsets are taken — they cover English, Italian and the rest
+// of Western Europe, plus typographic quotes, dashes and €. Italics come
+// along where the family has them (files end in "i": inter-700i.woff2).
 
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -37,9 +37,18 @@ for (const f of families) {
     const src = path.join(pkgDir, `package/files/${f.id}-latin-${w}-normal.woff2`)
     fs.copyFileSync(src, path.join(out, `${f.id}-${w}.woff2`))
   }
-  catalog.push({ ...f, weights })
+  const italics = []
+  if ((meta.styles ?? []).includes('italic')) {
+    for (const w of weights) {
+      const src = path.join(pkgDir, `package/files/${f.id}-latin-${w}-italic.woff2`)
+      if (!fs.existsSync(src)) continue
+      fs.copyFileSync(src, path.join(out, `${f.id}-${w}i.woff2`))
+      italics.push(w)
+    }
+  }
+  catalog.push({ ...f, weights, italics })
   licenses.push(`${f.family} — ${meta.license?.type ?? 'see package'} — ${meta.license?.url ?? ''} (via @fontsource/${f.id} ${meta.version ?? ''})`)
-  console.log(`${f.family}: ${weights.join(', ')}`)
+  console.log(`${f.family}: ${weights.join(', ')}${italics.length ? ` · italic ${italics.join(', ')}` : ''}`)
 }
 
 fs.writeFileSync(path.join(root, 'src/fonts/catalog.json'), JSON.stringify(catalog, null, 2) + '\n')

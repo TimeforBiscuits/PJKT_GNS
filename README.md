@@ -39,8 +39,10 @@ white edge.
   sideways are rotated on the page instead.
 - Print **with borders at 100 % / Actual size**. Canon Pixma's borderless
   mode enlarges the page, which throws off the measurements.
-- Crop marks go in the side margins. Where the printer can't reach the edge
-  of the sheet, short cut ticks sit inside the bleed that gets trimmed away.
+- Dashed cut lines run along every trim edge, right across the sheet, in
+  alternating black and white dashes so they show on paper and on dark
+  artwork. Cut on the line. Crop and fold marks sit in the margins only;
+  nothing is printed on the artwork's bleed.
 - Print the *Printer test page* once: the square must measure 100.0 mm, and
   the edge gauges show where your printer stops printing.
 
@@ -71,6 +73,11 @@ white edge.
   - 300/600 dpi vector PDF export
   - Calibration test page
 - [x] **6 · Storage:** autosave, `.gns` project files, offline install
+- [x] **Requests, round 1:**
+  - Picture scale and drag-to-recompose
+  - Bold and italic words in a text layer
+  - Sheet composer: any cover in any slot, so two different Notebooks can
+    share a page; dashed cut lines; no marks on the artwork
 - [ ] **7 · Cross-device polish**
 
 ## Development
@@ -100,7 +107,7 @@ src/
 ### Fonts
 
 The cover library holds 56 families (46 of them sans-serif), Latin subsets
-of the regular styles, taken from the [Fontsource](https://fontsource.org)
+of the upright and (where they exist) italic styles, taken from the [Fontsource](https://fontsource.org)
 packages of Google Fonts. All are free to use in print; see
 `public/fonts/LICENSES.txt`. To change the list, edit
 `src/fonts/families.json` and run `npm run fonts`.

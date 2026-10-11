@@ -16,10 +16,11 @@ import { writeSheetsPdf, writeTestPagePdf, type WriterDeps } from './writer'
 const fontsDir = path.resolve(__dirname, '../../public/fonts')
 const fonts = new Map<string, ShapingFont>()
 const deps: WriterDeps = {
-  font: (family, weight) => {
+  font: (family, weight, italic = false) => {
     const e = catalog.find((f) => f.family === family)!
-    const w = e.weights.reduce((b, x) => (Math.abs(x - weight) < Math.abs(b - weight) ? x : b))
-    const file = `${e.id}-${w}.woff2`
+    const list = italic ? e.italics : e.weights
+    const w = list.reduce((b, x) => (Math.abs(x - weight) < Math.abs(b - weight) ? x : b))
+    const file = `${e.id}-${w}${italic ? 'i' : ''}.woff2`
     if (!fonts.has(file)) fonts.set(file, fontkit.create(fs.readFileSync(path.join(fontsDir, file))) as unknown as ShapingFont)
     return fonts.get(file)!
   },

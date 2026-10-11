@@ -5,6 +5,7 @@ import { useDoc } from '../../store/doc'
 import { useEditor } from '../../store/editor'
 import { ColorRow } from '../../ui/ColorRow'
 import { LcdField, Panel, Segmented, Toggle } from '../../ui/controls'
+import { RichTextBox, StyleKeys, type RichTextHandle } from './RichTextBox'
 
 interface TypeStyle {
   family: string
@@ -156,37 +157,34 @@ export function TextPanel({ layer }: { layer: TextLayer }) {
   const end = useDoc((s) => s.endGesture)
   const textFocus = useEditor((s) => s.textFocus)
   const textFocused = useEditor((s) => s.textFocused)
-  const box = useRef<HTMLTextAreaElement>(null)
+  const editor = useRef<RichTextHandle>(null)
+  const [active, setActive] = useState({ bold: false, italic: false })
 
   // Placing text (or double-tapping it) asks for the keyboard, even if this panel only just appeared.
   useEffect(() => {
-    const el = box.current
-    if (!textFocus || !el) return
+    if (!textFocus || !editor.current) return
     textFocused()
-    el.focus()
-    el.select()
+    editor.current.focusAll()
   }, [textFocus, textFocused])
 
   return (
     <Panel num="03" it="TESTO" en="Type">
-      <label className="field">
+      <div className="field">
         <span className="field-label">Text</span>
-        <textarea
-          ref={box}
-          className="text-input"
-          value={layer.text}
-          spellCheck={false}
-          rows={3}
+        <RichTextBox
+          ref={editor}
+          text={layer.text}
+          spans={layer.spans ?? []}
+          family={layer.family}
           // A whole typing session is one undo step.
           onFocus={begin}
           onBlur={end}
-          onChange={(e) => update<TextLayer>(layer.id, { text: e.target.value })}
+          onActive={setActive}
+          onChange={(text, spans) => update<TextLayer>(layer.id, { text, spans })}
         />
-      </label>
-      <TypeControls
-        value={{ ...layer }}
-        onChange={(p) => update<TextLayer>(layer.id, p)}
-      />
+        <StyleKeys editor={editor} active={active} />
+      </div>
+      <TypeControls value={{ ...layer }} onChange={(p) => update<TextLayer>(layer.id, p)} />
     </Panel>
   )
 }
