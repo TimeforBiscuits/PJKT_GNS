@@ -76,6 +76,10 @@ export function Viewport({
   const sceneCursor = useOverlayCursor()
 
   // Latest camera for native listeners registered once.
+  const handlersRef = useRef(handlers)
+  useLayoutEffect(() => {
+    handlersRef.current = handlers
+  }, [handlers])
   const camRef = useRef(cam)
   useLayoutEffect(() => {
     camRef.current = cam
@@ -129,6 +133,12 @@ export function Viewport({
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       const c = camRef.current
+      const h = handlersRef.current
+      if (h?.wheel) {
+        const p = local(e)
+        const scene = { world: { x: (p.x - c.x) / c.zoom, y: (p.y - c.y) / c.zoom }, screen: p, shift: e.shiftKey, alt: e.altKey, pointerType: 'mouse', taps: 1 }
+        if (h.wheel(scene, e.deltaY * (e.deltaMode === 1 ? 16 : 1))) return
+      }
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientHeight : 1
       if (e.ctrlKey || e.metaKey) {
         const p = local(e)

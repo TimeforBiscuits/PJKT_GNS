@@ -16,7 +16,8 @@ export function ContentGhost() {
   const layer = useSelectedLayer()
   const contentEdit = useDoc((s) => s.contentEdit)
   const asset = useAssets((s) => (layer?.kind === 'image' ? s.assets[layer.assetId] : undefined))
-  if (!layer || layer.kind !== 'image' || !contentEdit || !asset) return null
+  const ghost = useOverlay((s) => s.ghost)
+  if (!layer || layer.kind !== 'image' || !(contentEdit || ghost) || !asset) return null
   const c = layer.content
   return (
     <g transform={svgMatrix(frameMatrix(layer))} opacity={0.38} pointerEvents="none">

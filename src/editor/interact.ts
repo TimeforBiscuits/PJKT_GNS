@@ -5,7 +5,9 @@ import { FORMATS, SAFE_MM } from '../model/formats'
 import { ptToMm } from '../model/units'
 import { useDoc, activeCover, selectedLayer } from '../store/doc'
 import { useEditor } from '../store/editor'
-import { handlesFor, layerAt, boundsEdges, snap1, snapLines, type HandleId } from './hit'
+import { clampToFill, isFullBleed, scalePicture, pictureScale } from '../model/picture'
+import { useAssets } from '../store/assets'
+import { coverSnapLines, handlesFor, layerAt, boundsEdges, snap1, snapLines, type HandleId } from './hit'
 import { fullBleedLayer, importFiles } from './importImage'
 import { pickImages } from './imagePicker'
 
@@ -13,10 +15,12 @@ import { pickImages } from './imagePicker'
 interface OverlayState {
   guides: { axis: 'x' | 'y'; at: number }[]
   cursor: string | null
+  /** Show the whole picture faintly while it's being repositioned. */
+  ghost: boolean
   set: (p: Partial<Omit<OverlayState, 'set'>>) => void
 }
 
-export const useOverlay = create<OverlayState>((set) => ({ guides: [], cursor: null, set }))
+export const useOverlay = create<OverlayState>((set) => ({ guides: [], cursor: null, ghost: false, set }))
 
 export interface ScenePointer {
   world: Pt
@@ -34,6 +38,8 @@ export interface SceneHandlers {
   up: (e: ScenePointer) => void
   cancel: () => void
   hover?: (e: ScenePointer) => void
+  /** Return true to take a wheel event (it then doesn't pan or zoom). */
+  wheel?: (e: ScenePointer, deltaY: number) => boolean
 }
 
 type Gesture =
@@ -120,6 +126,7 @@ function startSelect(e: ScenePointer): boolean {
     if (ci >= 0) {
       doc.beginGesture()
       gesture = { kind: 'content-scale', id: sel.id, anchor: corners[(ci + 2) % 4], content0: sel.content }
+      useOverlay.getState().set({ ghost: true })
       return true
     }
     const c = sel.content
@@ -132,6 +139,7 @@ function startSelect(e: ScenePointer): boolean {
       }
       doc.beginGesture()
       gesture = { kind: 'content-pan', id: sel.id, start: local, content0: sel.content }
+      useOverlay.getState().set({ ghost: true })
       return true
     }
     doc.setContentEdit(false)
@@ -153,6 +161,12 @@ function startSelect(e: ScenePointer): boolean {
     return false
   }
   doc.beginGesture()
+  if (hit.kind === 'image' && isFullBleed(hit, activeCover())) {
+    // A full-bleed frame has nowhere to go: dragging it recomposes the picture instead.
+    gesture = { kind: 'content-pan', id: hit.id, start: toLocal(hit, e.world), content0: hit.content }
+    useOverlay.getState().set({ ghost: true })
+    return true
+  }
   gesture = { kind: 'move', id: hit.id, start: e.world, frame0: { x: hit.x, y: hit.y, w: hit.w, h: hit.h, rotation: hit.rotation } }
   return true
 }
@@ -332,7 +346,19 @@ function moveGesture(e: ScenePointer) {
         if (Math.abs(dx) > Math.abs(dy)) dy = 0
         else dx = 0
       }
-      update<ImageLayer>(g.id, { content: { ...g.content0, x: g.content0.x + dx, y: g.content0.y + dy } })
+      let next = { ...g.content0, x: g.content0.x + dx, y: g.content0.y + dy }
+      // Snap the picture's centre to the fold, panel centres and trim centre.
+      if (!e.alt && layer.rotation === 0) {
+        const lines = coverSnapLines(activeCover())
+        const cx = layer.x + next.x + next.w / 2
+        const cy = layer.y + next.y + next.h / 2
+        const sx = snap1([cx], lines.x, snapTol())
+        const sy = snap1([cy], lines.y, snapTol())
+        next = { ...next, x: next.x + sx.delta, y: next.y + sy.delta }
+        showGuides(sx.at, sy.at)
+      }
+      if (layer.kind === 'image' && layer.fillLock) next = clampToFill(next, layer)
+      update<ImageLayer>(g.id, { content: next })
       break
     }
     case 'content-scale': {
@@ -350,7 +376,8 @@ function moveGesture(e: ScenePointer) {
       const h = c0.h * k
       const x = g.anchor.x === c0.x ? c0.x : g.anchor.x - w
       const y = g.anchor.y === c0.y ? c0.y : g.anchor.y - h
-      update<ImageLayer>(g.id, { content: { x, y, w, h } })
+      const next = { x, y, w, h }
+      update<ImageLayer>(g.id, { content: layer.kind === 'image' && layer.fillLock ? clampToFill(next, layer) : next })
       break
     }
     case 'draw': {
@@ -436,7 +463,7 @@ export const coverHandlers: SceneHandlers = {
   up(e) {
     const g = gesture
     gesture = null
-    useOverlay.getState().set({ guides: [] })
+    useOverlay.getState().set({ guides: [], ghost: false })
     if (!g) return
     if (g.kind === 'draw') finishDraw(g, e)
     if (g.kind === 'image-pick') {
@@ -455,7 +482,18 @@ export const coverHandlers: SceneHandlers = {
   cancel() {
     if (gesture && gesture.kind !== 'image-pick' && gesture.kind !== 'text-place') useDoc.getState().endGesture()
     gesture = null
-    useOverlay.getState().set({ guides: [] })
+    useOverlay.getState().set({ guides: [], ghost: false })
+  },
+  wheel(e, deltaY) {
+    // Alt/Option + scroll resizes the selected picture about the pointer.
+    if (!e.alt) return false
+    const sel = selectedLayer()
+    if (!sel || sel.kind !== 'image' || sel.locked) return false
+    const a = useAssets.getState().assets[sel.assetId]
+    if (!a) return false
+    const s = pictureScale(sel, a.width, a.height) * Math.exp(-Math.max(-60, Math.min(60, deltaY)) * 0.005)
+    useDoc.getState().updateLayer<ImageLayer>(sel.id, { content: scalePicture(sel, a.width, a.height, Math.max(0.1, Math.min(8, s)), toLocal(sel, e.world)) })
+    return true
   },
   hover(e) {
     const sel = selectedLayer()
