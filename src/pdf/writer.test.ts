@@ -78,7 +78,7 @@ const blackNotebook = (): Cover => ({ ...newCover('notebook', 1), layers: [block
 
 async function build(cover: Cover, copies: number, cut = false) {
   const sheets = composeSheets({ covers: [cover], sheets: [{ ...newSheet('notebook', cover.id), copies }] }, PRINTERS.pixma)
-  const bytes = await writeSheetsPdf(sheets, deps, { marks: { crop: true, fold: true, cut }, slug: () => 'TEST SLUG' })
+  const bytes = await writeSheetsPdf(sheets, deps, { cutLines: cut })
   return { bytes, sheets }
 }
 
@@ -164,21 +164,36 @@ describe('PDF output', () => {
     expect(lit).toBeGreaterThan(1000)
   })
 
-  it.skipIf(!hasPoppler)('centres the dashed cut lines exactly on the trim', async () => {
-    const { bytes, sheets } = await build(blackNotebook(), 1, true)
+  it.skipIf(!hasPoppler)('prints cut lines on white paper, touching each picture’s outer edge and never on it', async () => {
+    // A full-bleed mid-grey picture, so any dash landing on it would show.
+    const cover: Cover = { ...newCover('notebook', 1), layers: [block(-2, -2, 184, 144, '#808080')] }
+    const { bytes, sheets } = await build(cover, 1, true)
     const img = render(bytes)
-    const trim = sheets[0].layout.placements[0].trim
-    // In the top margin, the vertical cut line's first (black) dash sits on x = trim.x.
+    const b = sheets[0].layout.placements[0].bleed // 13, 3.5 → 197, 147.5
+    // In the top margin the left cut line sits just left of x = 13 mm.
     const darkCols: number[] = []
     for (let x = 0; x < 400; x++) if (img.at(x, 10) < 128) darkCols.push(x)
     expect(darkCols.length).toBeGreaterThan(0)
-    const mid = (Math.min(...darkCols) + Math.max(...darkCols) + 1) / 2
-    expect(Math.abs(mid - trim.x * 10)).toBeLessThanOrEqual(1)
-    // In the left margin, the top cut line sits on y = trim.y.
+    expect(Math.max(...darkCols)).toBeLessThanOrEqual(b.x * 10)
+    expect(Math.min(...darkCols)).toBeGreaterThanOrEqual(b.x * 10 - 2)
+    // In the left margin the top cut line sits just above y = 3.5 mm.
     const darkRows: number[] = []
-    for (let y = 0; y < 200; y++) if (img.at(10, y) < 128) darkRows.push(y)
-    const midY = (Math.min(...darkRows) + Math.max(...darkRows) + 1) / 2
-    expect(Math.abs(midY - trim.y * 10)).toBeLessThanOrEqual(1)
+    for (let y = 0; y < 100; y++) if (img.at(10, y) < 128) darkRows.push(y)
+    expect(Math.max(...darkRows)).toBeLessThanOrEqual(b.y * 10)
+    expect(Math.min(...darkRows)).toBeGreaterThanOrEqual(b.y * 10 - 2)
+    // Not one dark pixel on the picture itself (it's grey, 128).
+    const x0 = Math.ceil(b.x * 10) + 1
+    const x1 = Math.floor((b.x + b.w) * 10) - 2
+    const y0 = Math.ceil(b.y * 10) + 1
+    const y1 = Math.floor((b.y + b.h) * 10) - 2
+    for (let x = x0; x <= x1; x += 3) {
+      expect(img.at(x, y0)).toBeGreaterThan(100)
+      expect(img.at(x, y1)).toBeGreaterThan(100)
+    }
+    for (let y = y0; y <= y1; y += 3) {
+      expect(img.at(x0, y)).toBeGreaterThan(100)
+      expect(img.at(x1, y)).toBeGreaterThan(100)
+    }
   })
 
   it.skipIf(!hasPoppler)('draws the test page’s 100 mm square at true size', async () => {

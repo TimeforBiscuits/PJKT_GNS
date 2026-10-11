@@ -120,7 +120,7 @@ export function CoverScene({ cam, size }: ViewInfo) {
           <DimV y1={T.y} y2={T.y + T.h} x={paper.x - 30} from={paper.x - 8} label={`${mm(format.trim.h)} MM`} />
           {showBleed && (
             <Caption x={B.x} y={B.y + B.h + 22} anchor="start" color="var(--guide-bleed)" size={9}>
-              {`BLEED ${mm(BLEED_MM)} MM · CUT ON CYAN`}
+              {`BLEED ${mm(BLEED_MM)} MM · STICKER CUT ON THE OUTER EDGE · FINAL TRIM ON CYAN`}
             </Caption>
           )}
         </g>

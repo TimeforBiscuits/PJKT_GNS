@@ -32,7 +32,7 @@ import type { Sheet } from '../model/compose'
 import type { Cover, ImageLayer, Layer, ShapeLayer, TextLayer } from '../model/doc'
 import { bleedFrame } from '../model/doc'
 import { frameMatrix, mul, rotate, translate, type Box, type Mat } from '../model/geometry'
-import { CUT_DASH, type CutLine, type Mark, type Placement } from '../model/imposition'
+import { CUT_DASH, CUT_GAP, CUT_WIDTH, type CutLine, type Placement } from '../model/imposition'
 import { isClosed, rectPath, shapePath, type Path } from '../model/path'
 import { layoutText, type ShapingFont } from '../model/text'
 import { facesFor } from '../fonts/variants'
@@ -59,17 +59,13 @@ export interface WriterDeps {
 }
 
 export interface WriteOptions {
-  marks: { crop: boolean; fold: boolean; cut: boolean }
-  /** Small identifying line printed in the left margin. */
-  slug?: (page: number, total: number, s: Sheet) => string
+  /** Dashed cut lines around each picture, on the white paper only. */
+  cutLines: boolean
 }
 
 const K = mmToPt(1)
 const PAGE: [number, number] = [mmToPt(A4.w), mmToPt(A4.h)]
 
-/** Line widths for marks and cut lines, in mm. */
-const HAIRLINE = ptToMm(0.3)
-const CUT_WIDTH = ptToMm(0.35)
 
 
 const hexRgb = (hex: string): [number, number, number] => {
@@ -233,41 +229,17 @@ class PageWriter {
     ]
   }
 
-  marks(marks: Mark[]) {
-    if (!marks.length) return
-    const seg = (m: Mark) => [moveTo(m.x1, m.y1), lineTo(m.x2, m.y2)]
-    const ops: PDFOperator[] = [pushGraphicsState(), setLineCap(LineCapStyle.Butt)]
-    ops.push(setStrokingRgbColor(0, 0, 0), setLineWidth(HAIRLINE))
-    const crop = marks.filter((m) => m.kind === 'crop')
-    const fold = marks.filter((m) => m.kind === 'fold')
-    if (crop.length) ops.push(...crop.flatMap(seg), stroke())
-    if (fold.length) ops.push(setDashPattern([1, 0.6], 0), ...fold.flatMap(seg), stroke())
-    ops.push(popGraphicsState())
-    this.page.pushOperators(...ops)
-  }
-
-  /**
-   * Dashed cutting guides along every trim edge. Dashes alternate black and
-   * white so the line shows on white paper and on dark artwork alike, without
-   * a wide halo that could leave a sliver on the cover's edge.
-   */
+  /** Dashed cut lines. The dash pattern is anchored to the page so segments of one line stay in step. */
   cuts(lines: CutLine[]) {
     if (!lines.length) return
-    const segs = lines.flatMap((l) => [moveTo(l.x1, l.y1), lineTo(l.x2, l.y2)])
-    this.page.pushOperators(
-      pushGraphicsState(),
-      setLineCap(LineCapStyle.Butt),
-      setLineWidth(CUT_WIDTH),
-      setStrokingRgbColor(0, 0, 0),
-      setDashPattern([CUT_DASH, CUT_DASH], 0),
-      ...segs,
-      stroke(),
-      setStrokingRgbColor(1, 1, 1),
-      setDashPattern([CUT_DASH, CUT_DASH], CUT_DASH),
-      ...segs,
-      stroke(),
-      popGraphicsState(),
-    )
+    const period = CUT_DASH + CUT_GAP
+    const ops: PDFOperator[] = [pushGraphicsState(), setLineCap(LineCapStyle.Butt), setLineWidth(CUT_WIDTH), setStrokingRgbColor(0, 0, 0)]
+    for (const l of lines) {
+      const start = l.x1 === l.x2 ? l.y1 : l.x1
+      ops.push(setDashPattern([CUT_DASH, CUT_GAP], start % period), moveTo(l.x1, l.y1), lineTo(l.x2, l.y2), stroke())
+    }
+    ops.push(popGraphicsState())
+    this.page.pushOperators(...ops)
   }
 
   /** Outlined text at a position and angle, in page mm. */
@@ -326,8 +298,6 @@ export async function writeSheetsPdf(sheets: Sheet[], deps: WriterDeps, opts: Wr
   const pdf = await PDFDocument.create()
   newDoc(pdf, 'PJKT_GNS covers')
   const images = new Map<string, Promise<PDFImage | null>>()
-  const total = sheets.reduce((n, s) => n + s.spec.copies, 0)
-  let n = 0
   for (const sheet of sheets) {
     for (let copy = 0; copy < sheet.spec.copies; copy++) {
       const page = mmPage(pdf)
@@ -336,11 +306,8 @@ export async function writeSheetsPdf(sheets: Sheet[], deps: WriterDeps, opts: Wr
         const cover = sheet.covers[j]
         if (cover) await w.cover(cover, placementMatrix(sheet.layout.placements[j]))
       }
-      if (opts.marks.cut) w.cuts(sheet.cuts)
-      w.marks(sheet.layout.marks.filter((m) => opts.marks[m.kind]))
-      if (opts.slug) w.label(opts.slug(n, total, sheet), deps.font('IBM Plex Mono', 400), 5, 3.6, 285, -90, '#555555')
+      if (opts.cutLines) w.cuts(sheet.cuts)
       endPage(page)
-      n++
     }
   }
   return pdf.save({ useObjectStreams: true })

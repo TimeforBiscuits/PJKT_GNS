@@ -39,10 +39,11 @@ white edge.
   sideways are rotated on the page instead.
 - Print **with borders at 100 % / Actual size**. Canon Pixma's borderless
   mode enlarges the page, which throws off the measurements.
-- Dashed cut lines run along every trim edge, right across the sheet, in
-  alternating black and white dashes so they show on paper and on dark
-  artwork. Cut on the line. Crop and fold marks sit in the margins only;
-  nothing is printed on the artwork's bleed.
+- The only marks printed are dashed cut lines along each picture's outer
+  edge (the edge of its 2 mm bleed). They sit on the white paper only:
+  beside a picture they touch its edge without landing on it, and where two
+  pictures meet they show in the side margins. Cut there and each sticker
+  keeps its 2 mm bleed; trim that off after mounting it on card.
 - Print the *Printer test page* once: the square must measure 100.0 mm, and
   the edge gauges show where your printer stops printing.
 
@@ -77,7 +78,9 @@ white edge.
   - Picture scale and drag-to-recompose
   - Bold and italic words in a text layer
   - Sheet composer: any cover in any slot, so two different Notebooks can
-    share a page; dashed cut lines; no marks on the artwork
+    share a page
+  - Dashed cut lines on the white paper only, along each picture's outer
+    edge; no other marks
 - [ ] **7 · Cross-device polish**
 
 ## Development

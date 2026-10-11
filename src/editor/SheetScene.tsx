@@ -1,5 +1,5 @@
 import { SHEET_GAP, type Sheet } from '../model/compose'
-import { CUT_DASH, placementTransform } from '../model/imposition'
+import { CUT_DASH, CUT_GAP, placementTransform } from '../model/imposition'
 import { A4, type Rect } from '../model/units'
 import { useEditor } from '../store/editor'
 import { Caption, DimH, DimV, Hatches } from './annotations'
@@ -40,7 +40,7 @@ export function SheetScene({ cam }: ViewInfo) {
 }
 
 function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; count: number; cam: ViewInfo['cam'] }) {
-  const marks = useEditor((s) => s.marks)
+  const showCuts = useEditor((s) => s.cutLines)
   const z = cam.zoom
   const oy = index * (A4.h + SHEET_GAP)
   const sx = (x: number) => cam.x + x * z
@@ -49,15 +49,7 @@ function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; 
   const { layout } = sheet
   const P = layout.printable
   const rectPath = (r: Rect) => `M${r.x} ${r.y}h${r.w}v${r.h}h${-r.w}Z`
-  const cutPath = sheet.cuts.map((c) => `M${sx(c.x1)} ${sy(c.y1)}L${sx(c.x2)} ${sy(c.y2)}`).join('')
-  const dash = CUT_DASH * z
-
-  const visible = layout.marks.filter((m) => marks[m.kind])
-  const markPath = (inBleed: boolean, kind: 'crop' | 'fold') =>
-    visible
-      .filter((m) => m.inBleed === inBleed && m.kind === kind)
-      .map((m) => `M${sx(m.x1)} ${sy(m.y1)}L${sx(m.x2)} ${sy(m.y2)}`)
-      .join('')
+  const period = CUT_DASH + CUT_GAP
 
   return (
     <g>
@@ -99,14 +91,18 @@ function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; 
         />
       ))}
 
-      {marks.cut && (
-        <g>
-          <path d={cutPath} stroke="#000" strokeWidth={1.2} strokeDasharray={`${dash} ${dash}`} />
-          <path d={cutPath} stroke="#fff" strokeWidth={1.2} strokeDasharray={`${dash} ${dash}`} strokeDashoffset={dash} />
-        </g>
-      )}
-      <path d={markPath(false, 'crop')} stroke="#000" strokeWidth={1.2} />
-      <path d={markPath(false, 'fold')} stroke="#000" strokeWidth={1.2} strokeDasharray="3 2" />
+      {/* the dashed cut lines, exactly as the PDF prints them (white paper only) */}
+      {showCuts &&
+        sheet.cuts.map((c, i) => (
+          <path
+            key={i}
+            d={`M${sx(c.x1)} ${sy(c.y1)}L${sx(c.x2)} ${sy(c.y2)}`}
+            stroke="#000"
+            strokeWidth={1.2}
+            strokeDasharray={`${CUT_DASH * z} ${CUT_GAP * z}`}
+            strokeDashoffset={((c.x1 === c.x2 ? c.y1 : c.x1) % period) * z}
+          />
+        ))}
 
       {layout.placements.map((p, i) => {
         const cy = sy(p.trim.y + p.trim.h / 2)

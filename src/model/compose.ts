@@ -23,10 +23,7 @@ export function composeSheets(project: Project, printer: PrinterProfile): Sheet[
       return c && c.formatId === spec.formatId ? c : null
     })
     if (!covers.some(Boolean)) continue
-    const filled = covers.map(Boolean)
-    // Marks for blank slots, and marks that would sit on a cover's bleed, aren't printed.
-    const marks = layout.marks.filter((m) => filled[m.slot] && !m.inBleed)
-    out.push({ spec, formatId: spec.formatId, layout: { ...layout, marks }, covers, cuts: cutLines(layout, filled) })
+    out.push({ spec, formatId: spec.formatId, layout, covers, cuts: cutLines(layout, covers.map(Boolean)) })
   }
   return out
 }

@@ -78,7 +78,8 @@ interface EditorState {
   savedAt: number | null
   /** A short status message, e.g. an import error. */
   message: { text: string; at: number; tone: 'info' | 'alert' } | null
-  marks: { crop: boolean; fold: boolean; cut: boolean }
+  /** Print dashed cut lines around each picture. */
+  cutLines: boolean
 
   setView: (v: ViewId) => void
   setTool: (t: ToolId) => void
@@ -93,7 +94,7 @@ interface EditorState {
   setPxPerMm: (v: number | null) => void
   setPrinter: (id: string) => void
   setDpi: (dpi: 300 | 600) => void
-  toggleMark: (m: 'crop' | 'fold' | 'cut') => void
+  setCutLines: (on: boolean) => void
   focusText: () => void
   textFocused: () => void
   flash: (text: string, tone?: 'info' | 'alert') => void
@@ -130,7 +131,7 @@ export const useEditor = create<EditorState>((set) => ({
   calibrating: false,
   printerId: 'pixma',
   dpi: 600,
-  marks: { crop: true, fold: true, cut: true },
+  cutLines: true,
   textFocus: false,
   message: null,
   savedAt: null,
@@ -156,7 +157,7 @@ export const useEditor = create<EditorState>((set) => ({
   },
   setPrinter: (printerId) => set({ printerId }),
   setDpi: (dpi) => set({ dpi }),
-  toggleMark: (m) => set((s) => ({ marks: { ...s.marks, [m]: !s.marks[m] } })),
+  setCutLines: (cutLines) => set({ cutLines }),
   focusText: () => set({ textFocus: true }),
   textFocused: () => set({ textFocus: false }),
   flash: (text, tone = 'alert') => set({ message: { text, at: Date.now(), tone } }),

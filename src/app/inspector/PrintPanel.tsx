@@ -16,8 +16,8 @@ export function PrintPanel() {
   const setPrinter = useEditor((s) => s.setPrinter)
   const dpi = useEditor((s) => s.dpi)
   const setDpi = useEditor((s) => s.setDpi)
-  const marks = useEditor((s) => s.marks)
-  const toggleMark = useEditor((s) => s.toggleMark)
+  const cutLines = useEditor((s) => s.cutLines)
+  const setCutLines = useEditor((s) => s.setCutLines)
   const project = useDoc((s) => s.project)
   const sheets = useSheets()
   const covers = sheets.reduce((n, s) => n + s.covers.filter(Boolean).length * s.spec.copies, 0)
@@ -63,17 +63,13 @@ export function PrintPanel() {
           ]}
         />
       </div>
-      <Toggle on={marks.cut} onChange={() => toggleMark('cut')} chip="repeating-linear-gradient(90deg,#000 0 4px,#fff 4px 8px)">
+      <Toggle on={cutLines} onChange={setCutLines} chip="repeating-linear-gradient(90deg,#000 0 4px,transparent 4px 7px)">
         Dashed cut lines
       </Toggle>
-      <div className="grid-2">
-        <Toggle on={marks.crop} onChange={() => toggleMark('crop')}>
-          Crop marks
-        </Toggle>
-        <Toggle on={marks.fold} onChange={() => toggleMark('fold')}>
-          Fold marks
-        </Toggle>
-      </div>
+      <p className="note">
+        The only marks printed: dashes on the white paper along each picture’s outer edge. Cut there and the sticker
+        keeps its <b>2 mm bleed</b> — trim that off after mounting.
+      </p>
 
       {clipped && (
         <div className="warn">

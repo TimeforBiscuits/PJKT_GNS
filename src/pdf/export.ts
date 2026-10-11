@@ -1,6 +1,5 @@
 import { composeSheets, type Sheet } from '../model/compose'
 import type { ImageLayer } from '../model/doc'
-import { FORMATS } from '../model/formats'
 import { PRINTERS } from '../model/imposition'
 import { MM_PER_INCH } from '../model/units'
 import { fileSync, fontEntry, fontSync, loadFont, loadTextFonts } from '../fonts/registry'
@@ -132,9 +131,7 @@ export async function buildCoversPdf(onProgress?: (msg: string) => void): Promis
   const deps = await browserDeps(sheets, ed.dpi, () => onProgress?.(`Pictures ${++pics}`))
   onProgress?.('Writing PDF')
   const bytes = await writeSheetsPdf(sheets, deps, {
-    marks: ed.marks,
-    slug: (i, n, s) =>
-      `//PJKT_GNS · PAGE ${i + 1}/${n} · ${s.covers.filter(Boolean).length} × ${FORMATS[s.formatId].name.toUpperCase()} ${FORMATS[s.formatId].trim.w}×${FORMATS[s.formatId].trim.h} MM · PRINT AT 100 % · ${printer.name.toUpperCase()}`,
+    cutLines: ed.cutLines,
   })
   const file = new File([bytes as BlobPart], `PJKT_GNS-covers-${stamp()}.pdf`, { type: 'application/pdf' })
   return { file, sheets: sheets.reduce((n, s) => n + s.spec.copies, 0) }

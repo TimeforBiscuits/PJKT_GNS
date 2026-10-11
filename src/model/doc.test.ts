@@ -3,7 +3,7 @@ import { composeSheets } from './compose'
 import { newCover, type Project } from './doc'
 import { dropCover, migrateProject, newSheet, pageCount, placeCover, refileCover } from './sheets'
 import { apply, frameMatrix, invert, reframe, type Pt } from './geometry'
-import { PRINTERS } from './imposition'
+import { CUT_WIDTH, PRINTERS } from './imposition'
 import { polygonPoints, rectPath, toSvgD } from './path'
 
 const close = (a: Pt, b: Pt) => {
@@ -71,29 +71,35 @@ describe('sheets', () => {
     expect(pageCount(project)).toBe(3)
   })
 
-  it('keeps a blank slot blank and prints no marks for it', () => {
+  it('keeps a blank slot blank, with no cut lines around it', () => {
     const a = newCover('notebook', 1)
     const [sheet] = composeSheets({ covers: [a], sheets: [{ ...newSheet('notebook'), slots: [null, a.id] }] }, PRINTERS.pixma)
     expect(sheet.covers[0]).toBeNull()
-    expect(sheet.layout.marks.every((m) => m.slot === 1)).toBe(true)
+    const [top] = sheet.layout.placements
+    expect(sheet.cuts.some((c) => c.y1 === c.y2 && Math.abs(c.y1 - top.bleed.y) < 0.1)).toBe(false)
   })
 
-  it('never prints marks on a cover’s bleed', () => {
-    const a = newCover('notebook', 1)
-    const [sheet] = composeSheets({ covers: [a], sheets: [newSheet('notebook', a.id)] }, PRINTERS.pixma)
-    expect(sheet.layout.marks.some((m) => m.inBleed)).toBe(false)
-  })
-
-  it('runs dashed cut lines along every trim edge, never across a cover', () => {
+  it('cuts along each picture’s outer edge, on white paper only', () => {
     const a = newCover('notebook', 1)
     const [sheet] = composeSheets({ covers: [a], sheets: [newSheet('notebook', a.id)] }, PRINTERS.pixma)
     const [top, bottom] = sheet.layout.placements
-    const xs = new Set(sheet.cuts.filter((c) => c.x1 === c.x2).map((c) => c.x1))
-    const ys = new Set(sheet.cuts.filter((c) => c.y1 === c.y2).map((c) => c.y1))
-    expect([...xs].sort((p, q) => p - q)).toEqual([top.trim.x, top.trim.x + top.trim.w])
-    expect([...ys].sort((p, q) => p - q)).toEqual([top.trim.y, top.trim.y + 140, bottom.trim.y, bottom.trim.y + 140])
-    // horizontal cuts span the sheet edge to edge
-    for (const c of sheet.cuts.filter((c) => c.y1 === c.y2)) expect([c.x1, c.x2]).toEqual([0, 210])
+    const o = CUT_WIDTH / 2
+    const vertical = sheet.cuts.filter((c) => c.x1 === c.x2)
+    const horizontal = sheet.cuts.filter((c) => c.y1 === c.y2)
+    // the side edges, just outside the pictures, top of the sheet to the bottom
+    expect(vertical.map((c) => [c.x1, c.y1, c.y2])).toEqual([
+      [top.bleed.x - o, 0, 297],
+      [top.bleed.x + top.bleed.w + o, 0, 297],
+    ])
+    // top and bottom edges run the full width
+    const at = (y: number) => horizontal.filter((c) => Math.abs(c.y1 - y) < 1e-9).map((c) => [c.x1, c.x2])
+    expect(at(top.bleed.y - o)).toEqual([[0, 210]])
+    expect(at(bottom.bleed.y + bottom.bleed.h + o)).toEqual([[0, 210]])
+    // where the two pictures meet, the line only shows in the margins
+    expect(at(top.bleed.y + top.bleed.h)).toEqual([
+      [0, top.bleed.x],
+      [top.bleed.x + top.bleed.w, 210],
+    ])
   })
 
   it('follows covers as they come and go', () => {

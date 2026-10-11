@@ -1,4 +1,4 @@
-import { BLEED_MM, foldX, type CoverFormat } from './formats'
+import { BLEED_MM, type CoverFormat } from './formats'
 import { A4, type Rect, type Size } from './units'
 
 // Imposition: arranging covers on an A4 sheet for printing.
@@ -38,29 +38,10 @@ export interface Placement {
   rotation: 0 | 90
 }
 
-export type MarkKind = 'crop' | 'fold'
-
-export interface Mark {
-  x1: number
-  y1: number
-  x2: number
-  y2: number
-  kind: MarkKind
-  /**
-   * True when the mark sits inside the cover's own bleed because the space
-   * outside is unprintable or taken by a neighbouring cover. That strip is
-   * cut away, so the mark never shows on the finished cover.
-   */
-  inBleed: boolean
-  /** Which placement the mark belongs to. */
-  slot: number
-}
-
 export interface SheetLayout {
   sheet: Size
   printable: Rect
   placements: Placement[]
-  marks: Mark[]
   /** Some bleed lands in the printer's no-print zone and will come out white. */
   bleedClipped: boolean
 }
@@ -71,14 +52,6 @@ export interface LayoutOptions {
   /** Cap on covers per sheet; defaults to as many as fit. */
   max?: number
 }
-
-/** Distance from the bleed edge to the start of a crop mark. */
-export const MARK_OFFSET = 1
-export const MARK_LENGTH = 5
-/** Shorter than this and a mark is not worth printing outside the bleed. */
-const MARK_MIN = 2
-/** Gap between an in-bleed mark and the trim line it points at. */
-const IN_BLEED_GAP = 0.5
 
 /** Drop floating-point dust (0.1 µm) so positions read as the round numbers they are. */
 const tidy = (mm: number): number => Math.round(mm * 1e4) / 1e4
@@ -140,8 +113,7 @@ export function layoutSheet(format: CoverFormat, opts: LayoutOptions = {}): Shee
   }
 
   const bleedClipped = placements.some((p) => !containsRect(printable, p.bleed))
-  const marks = placements.flatMap((p, slot) => marksFor(p, format, placements, printable).map((m) => ({ ...m, slot })))
-  return { sheet, printable, placements, marks, bleedClipped }
+  return { sheet, printable, placements, bleedClipped }
 }
 
 const containsRect = (outer: Rect, inner: Rect, eps = 1e-6): boolean =>
@@ -149,83 +121,6 @@ const containsRect = (outer: Rect, inner: Rect, eps = 1e-6): boolean =>
   inner.y >= outer.y - eps &&
   inner.x + inner.w <= outer.x + outer.w + eps &&
   inner.y + inner.h <= outer.y + outer.h + eps
-
-/**
- * Marks along the line `axis = at` at both ends of a placement. A vertical
- * line (axis 'x') gets marks above and below; a horizontal one left and right.
- */
-function lineMarks(
-  p: Placement,
-  axis: 'x' | 'y',
-  at: number,
-  kind: MarkKind,
-  others: Placement[],
-  printable: Rect,
-): Omit<Mark, 'slot'>[] {
-  // Work in "along" (direction of the line) and "across" coordinates.
-  const along = axis === 'x' ? 'y' : 'x'
-  const size = along === 'y' ? 'h' : 'w'
-  const lo = p.bleed[along]
-  const hi = p.bleed[along] + p.bleed[size]
-  const trimLo = p.trim[along]
-  const trimHi = p.trim[along] + p.trim[size]
-  const pLo = printable[along]
-  const pHi = printable[along] + printable[size]
-
-  // Neighbours whose bleed crosses this line block the space beyond our bleed.
-  const crossing = others.filter(
-    (o) => o !== p && o.bleed[axis] < at && o.bleed[axis] + o.bleed[axis === 'x' ? 'w' : 'h'] > at,
-  )
-  const limitLo = Math.max(
-    pLo,
-    ...crossing.map((o) => o.bleed[along] + o.bleed[size]).filter((e) => e <= lo + 1e-6),
-  )
-  const limitHi = Math.min(pHi, ...crossing.map((o) => o.bleed[along]).filter((s) => s >= hi - 1e-6))
-
-  const segs: { a: number; b: number; inBleed: boolean }[] = []
-
-  const roomLo = lo - MARK_OFFSET - limitLo
-  if (roomLo >= MARK_MIN) {
-    segs.push({ a: lo - MARK_OFFSET - Math.min(MARK_LENGTH, roomLo), b: lo - MARK_OFFSET, inBleed: false })
-  } else {
-    const a = Math.max(lo, pLo)
-    const b = trimLo - IN_BLEED_GAP
-    if (b - a >= IN_BLEED_GAP) segs.push({ a, b, inBleed: true })
-  }
-
-  const roomHi = limitHi - (hi + MARK_OFFSET)
-  if (roomHi >= MARK_MIN) {
-    segs.push({ a: hi + MARK_OFFSET, b: hi + MARK_OFFSET + Math.min(MARK_LENGTH, roomHi), inBleed: false })
-  } else {
-    const a = trimHi + IN_BLEED_GAP
-    const b = Math.min(hi, pHi)
-    if (b - a >= IN_BLEED_GAP) segs.push({ a, b, inBleed: true })
-  }
-
-  return segs.map(({ a, b, inBleed }) =>
-    axis === 'x'
-      ? { x1: at, y1: a, x2: at, y2: b, kind, inBleed }
-      : { x1: a, y1: at, x2: b, y2: at, kind, inBleed },
-  )
-}
-
-function marksFor(p: Placement, format: CoverFormat, all: Placement[], printable: Rect): Omit<Mark, 'slot'>[] {
-  const t = p.trim
-  const fold = foldX(format)
-  const marks = [
-    ...lineMarks(p, 'x', t.x, 'crop', all, printable),
-    ...lineMarks(p, 'x', t.x + t.w, 'crop', all, printable),
-    ...lineMarks(p, 'y', t.y, 'crop', all, printable),
-    ...lineMarks(p, 'y', t.y + t.h, 'crop', all, printable),
-  ]
-  // The fold runs across the cover's width; after a quarter-turn it runs across the sheet.
-  marks.push(
-    ...(p.rotation === 0
-      ? lineMarks(p, 'x', t.x + fold, 'fold', all, printable)
-      : lineMarks(p, 'y', t.y + fold, 'fold', all, printable)),
-  )
-  return marks
-}
 
 /** SVG/PDF-style transform taking cover coordinates (mm, trim origin) onto the sheet. */
 export const placementTransform = (p: Placement): string =>
@@ -242,8 +137,10 @@ export const coverToSheet = (p: Placement, cx: number, cy: number): { x: number;
 export const coversPerSheet = (format: CoverFormat, printer: PrinterProfile = DEFAULT_PRINTER): number =>
   layoutSheet(format, { printer }).placements.length
 
-/** Dash length of cut lines, mm. */
+/** Printed cut lines: 0.35 pt wide, 2 mm dashes with 1.5 mm gaps. */
+export const CUT_WIDTH = (0.35 * 25.4) / 72
 export const CUT_DASH = 2
+export const CUT_GAP = 1.5
 
 export interface CutLine {
   x1: number
@@ -253,41 +150,51 @@ export interface CutLine {
 }
 
 /**
- * Dashed cutting guides: every trim edge of the filled slots, run right
- * across the sheet so a ruler can be laid along it — except where that would
- * cross another cover's face.
+ * Dashed cutting guides along the outer edge of every printed picture (its
+ * bleed edge) — where the sticker is cut out, keeping its 2 mm bleed for
+ * trimming after it's mounted.
+ *
+ * Each edge runs right across the sheet so a ruler can be laid along it,
+ * but is only drawn over white paper: a line running beside a picture sits
+ * just outside it (touching, never on it), and where two pictures meet
+ * the line only appears in the margins either side.
  */
-export function cutLines(layout: SheetLayout, filled: boolean[]): CutLine[] {
-  const { sheet } = layout
-  const used = layout.placements.filter((_, i) => filled[i])
-  const eps = 1e-6
-  const xs = [...new Set(used.flatMap((p) => [p.trim.x, p.trim.x + p.trim.w]))]
-  const ys = [...new Set(used.flatMap((p) => [p.trim.y, p.trim.y + p.trim.h]))]
-
-  /** Split [0, len] around the given blocked intervals. */
-  const free = (len: number, blocked: [number, number][]) => {
-    const out: [number, number][] = []
-    let at = 0
-    for (const [a, b] of blocked.sort((m, n) => m[0] - n[0])) {
-      if (a > at) out.push([at, a])
-      at = Math.max(at, b)
-    }
-    if (at < len) out.push([at, len])
-    return out
-  }
-
+export function cutLines(layout: SheetLayout, filled: boolean[], width = CUT_WIDTH): CutLine[] {
+  const boxes = layout.placements.filter((_, i) => filled[i]).map((p) => p.bleed)
+  const { w: W, h: H } = layout.sheet
+  const d = 1e-4
+  const inside = (x: number, y: number) => boxes.some((b) => x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h)
   const lines: CutLine[] = []
-  for (const x of xs) {
-    const blocked = used
-      .filter((p) => x > p.trim.x + eps && x < p.trim.x + p.trim.w - eps)
-      .map((p): [number, number] => [p.trim.y, p.trim.y + p.trim.h])
-    for (const [a, b] of free(sheet.h, blocked)) lines.push({ x1: x, y1: a, x2: x, y2: b })
+
+  /** One guide at `at` across the sheet; `vertical` lines run down the page. */
+  const guide = (at: number, vertical: boolean) => {
+    const len = vertical ? H : W
+    const stops = [0, len, ...boxes.flatMap((b) => (vertical ? [b.y, b.y + b.h] : [b.x, b.x + b.w]))]
+      .filter((v) => v >= 0 && v <= len)
+      .sort((a, b) => a - b)
+    const segs: [number, number][] = []
+    let before = false
+    let after = false
+    for (let i = 0; i + 1 < stops.length; i++) {
+      const [a, b] = [stops[i], stops[i + 1]]
+      if (b - a < 1e-6) continue
+      const m = (a + b) / 2
+      const lo = vertical ? inside(at - d, m) : inside(m, at - d)
+      const hi = vertical ? inside(at + d, m) : inside(m, at + d)
+      if (lo && hi) continue // between two pictures, or across one: no line
+      before ||= lo
+      after ||= hi
+      const last = segs[segs.length - 1]
+      if (last && Math.abs(last[1] - a) < 1e-6) last[1] = b
+      else segs.push([a, b])
+    }
+    // Step off the picture by half the line's width so no ink lands on it.
+    const shift = before && !after ? width / 2 : after && !before ? -width / 2 : 0
+    const c = at + shift
+    for (const [a, b] of segs) lines.push(vertical ? { x1: c, y1: a, x2: c, y2: b } : { x1: a, y1: c, x2: b, y2: c })
   }
-  for (const y of ys) {
-    const blocked = used
-      .filter((p) => y > p.trim.y + eps && y < p.trim.y + p.trim.h - eps)
-      .map((p): [number, number] => [p.trim.x, p.trim.x + p.trim.w])
-    for (const [a, b] of free(sheet.w, blocked)) lines.push({ x1: a, y1: y, x2: b, y2: y })
-  }
+
+  for (const x of new Set(boxes.flatMap((b) => [b.x, b.x + b.w]))) guide(x, true)
+  for (const y of new Set(boxes.flatMap((b) => [b.y, b.y + b.h]))) guide(y, false)
   return lines
 }

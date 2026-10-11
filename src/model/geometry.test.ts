@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BLEED_MM, FORMATS, bleedSize, foldX, panelSize, safeRects } from './formats'
-import { PRINTERS, coverToSheet, layoutSheet, type Mark, type Placement } from './imposition'
+import { CUT_WIDTH, PRINTERS, coverToSheet, cutLines, layoutSheet, type CutLine, type Placement } from './imposition'
 import { A4, mmToPt, ptToMm, type Rect } from './units'
 
 const EPS = 1e-9
@@ -11,12 +11,6 @@ const inside = (outer: Rect, x: number, y: number) =>
 const overlaps = (a: Rect, b: Rect) =>
   a.x < b.x + b.w - EPS && b.x < a.x + a.w - EPS && a.y < b.y + b.h - EPS && b.y < a.y + a.h - EPS
 
-const markRect = (m: Mark): Rect => ({
-  x: Math.min(m.x1, m.x2),
-  y: Math.min(m.y1, m.y2),
-  w: Math.abs(m.x2 - m.x1),
-  h: Math.abs(m.y2 - m.y1),
-})
 
 describe('units', () => {
   it('converts A4 to the exact PDF point size', () => {
@@ -106,29 +100,38 @@ describe.each(Object.values(PRINTERS))('imposition invariants — $name', (print
         for (let j = i + 1; j < ps.length; j++) expect(overlaps(ps[i].bleed, ps[j].bleed)).toBe(false)
     })
 
-    it('puts every mark where it prints and where it is trimmed away', () => {
-      expect(l.marks.length).toBeGreaterThan(0)
-      for (const m of l.marks) {
-        const r = markRect(m)
-        expect(inside(l.printable, r.x, r.y)).toBe(true)
-        expect(inside(l.printable, r.x + r.w, r.y + r.h)).toBe(true)
-        for (const p of l.placements) {
-          // no mark may ever reach into a finished cover
-          expect(overlaps(r, p.trim)).toBe(false)
-          if (!m.inBleed) expect(overlaps(r, p.bleed)).toBe(false)
-        }
-      }
+    const cuts = cutLines(l, l.placements.map(() => true))
+    const stroke = (c: CutLine): Rect =>
+      c.x1 === c.x2
+        ? { x: c.x1 - CUT_WIDTH / 2, y: c.y1, w: CUT_WIDTH, h: c.y2 - c.y1 }
+        : { x: c.x1, y: c.y1 - CUT_WIDTH / 2, w: c.x2 - c.x1, h: CUT_WIDTH }
+
+    it('never puts a cut line on a picture', () => {
+      expect(cuts.length).toBeGreaterThan(0)
+      for (const c of cuts) for (const p of l.placements) expect(overlaps(stroke(c), p.bleed)).toBe(false)
     })
 
-    it('marks every cut line and the fold', () => {
-      const crop = l.marks.filter((m) => m.kind === 'crop')
-      const fold = l.marks.filter((m) => m.kind === 'fold')
+    it('guides every picture edge that faces white paper, along its whole length', () => {
+      const covered = (x: number, y: number) =>
+        cuts.some((c) => {
+          const r = stroke(c)
+          return x >= r.x - 1e-6 && x <= r.x + r.w + 1e-6 && y >= r.y - 1e-6 && y <= r.y + r.h + 1e-6
+        })
+      const onPicture = (x: number, y: number) =>
+        l.placements.some((p) => x > p.bleed.x && x < p.bleed.x + p.bleed.w && y > p.bleed.y && y < p.bleed.y + p.bleed.h)
+      const o = CUT_WIDTH / 2
       for (const p of l.placements) {
-        const t = p.trim
-        for (const x of [t.x, t.x + t.w]) expect(crop.some((m) => m.x1 === x && m.x2 === x)).toBe(true)
-        for (const y of [t.y, t.y + t.h]) expect(crop.some((m) => m.y1 === y && m.y2 === y)).toBe(true)
+        const b = p.bleed
+        for (let t = 0.25; t < 1; t += 0.05) {
+          const edges: [number, number][] = [
+            [b.x - o, b.y + t * b.h],
+            [b.x + b.w + o, b.y + t * b.h],
+            [b.x + t * b.w, b.y - o],
+            [b.x + t * b.w, b.y + b.h + o],
+          ]
+          for (const [x, y] of edges) if (!onPicture(x, y)) expect(covered(x, y)).toBe(true)
+        }
       }
-      expect(fold.length).toBeGreaterThan(0)
     })
   })
 })
