@@ -1,11 +1,12 @@
 import { memo } from 'react'
-import { bleedFrame, type Cover, type ImageLayer, type Layer, type ShapeLayer, type TextLayer } from '../model/doc'
+import { bleedFrame, hasEffects, type Cover, type ImageLayer, type Layer, type ShapeLayer, type TextLayer } from '../model/doc'
 import { frameMatrix, svgMatrix } from '../model/geometry'
 import { isClosed, shapePath, toSvgD } from '../model/path'
 import { ptToMm } from '../model/units'
 import { useAssets } from '../store/assets'
 import { CensorArt } from './CensorArt'
 import { flipMatrix } from './draw'
+import { FxArt } from './FxArt'
 import { TextArt } from './TextArt'
 
 /**
@@ -27,12 +28,17 @@ export const CoverArt = memo(function CoverArt({ cover, idp }: { cover: Cover; i
 
 export const LayerArt = memo(function LayerArt({ layer, idp }: { layer: Layer; idp: string }) {
   const t = svgMatrix(frameMatrix(layer))
-  return (
-    <g transform={t} opacity={layer.opacity < 1 ? layer.opacity : undefined}>
+  const plain = (
+    <>
       {layer.kind === 'image' && <ImageArt layer={layer} idp={idp} />}
       {layer.kind === 'shape' && <ShapeArt layer={layer} idp={idp} />}
       {layer.kind === 'text' && <TextArt layer={layer as TextLayer} />}
       {layer.kind === 'censor' && <CensorArt layer={layer} idp={idp} />}
+    </>
+  )
+  return (
+    <g transform={t} opacity={layer.opacity < 1 ? layer.opacity : undefined}>
+      {hasEffects(layer) ? <FxArt layer={layer} idp={idp} plain={plain} /> : plain}
     </g>
   )
 })

@@ -234,6 +234,32 @@ describe('PDF output', () => {
     expect(img.at(X(45), Y(38))).toBeGreaterThan(200)
   })
 
+  it.skipIf(!hasPoppler)('places an effect render exactly over its layer', async () => {
+    // A 1 × 1 black PNG stands in for the render; it should fill the box it's given.
+    const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNgAAAAAgABSK+kcQAAAABJRU5ErkJggg=='), (c) => c.charCodeAt(0))
+    const dotted: ShapeLayer = { ...block(30, 50, 40, 20, '#ff4f00'), effects: { benday: { strength: 60, dotMm: 2 }, distress: null } }
+    const cover: Cover = { ...newCover('notebook', 1), layers: [dotted] }
+    const sheets = composeSheets({ covers: [cover], sheets: [{ ...newSheet('notebook', cover.id), copies: 1 }] }, PRINTERS.pixma)
+    const seen: string[] = []
+    const fxDeps: WriterDeps = {
+      ...deps,
+      effect: async (l) => {
+        seen.push(l.id)
+        return { bytes: png, kind: 'png', region: { x: -1, y: -1, w: l.w + 2, h: l.h + 2 } }
+      },
+    }
+    const img = render(await writeSheetsPdf(sheets, fxDeps, { cutLines: false }))
+    const t = sheets[0].layout.placements[0].trim
+    // both covers on the sheet, one render shared
+    expect(seen).toEqual([dotted.id])
+    const dark = (xmm: number, ymm: number) => img.at(Math.round((t.x + xmm) * 10), Math.round((t.y + ymm) * 10)) < 60
+    expect(dark(29.5, 60)).toBe(true) // the box runs 1 mm past the frame
+    expect(dark(70.5, 60)).toBe(true)
+    expect(dark(27.5, 60)).toBe(false)
+    expect(dark(72.5, 60)).toBe(false)
+    expect(dark(50, 48.5)).toBe(false)
+  })
+
   it.skipIf(!hasPoppler)('draws the test page’s 100 mm square at true size', async () => {
     const img = render(await writeTestPagePdf(deps))
     // The square spans x 55–155 mm; scan its middle row for its two sides.

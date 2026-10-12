@@ -31,7 +31,8 @@ import {
 import type { Sheet } from '../model/compose'
 import { CENSOR_FAMILY, censorFace, censorFontWeight, layoutCensor } from '../model/censor'
 import type { CensorLayer, Cover, ImageLayer, Layer, ShapeLayer, TextLayer } from '../model/doc'
-import { bleedFrame } from '../model/doc'
+import { bleedFrame, hasEffects } from '../model/doc'
+import { fxKey } from '../effects/key'
 import { frameMatrix, mul, rotate, translate, type Box, type Mat } from '../model/geometry'
 import { CUT_DASH, CUT_GAP, CUT_WIDTH, type CutLine, type Placement } from '../model/imposition'
 import { isClosed, rectPath, shapePath, type Path } from '../model/path'
@@ -57,6 +58,8 @@ export interface WriterDeps {
   font: (family: string, weight: number, italic?: boolean) => ShapingFont
   /** Pixels for a picture layer, cropped to what shows and resampled. */
   image: (layer: ImageLayer) => Promise<PlacedImage | null>
+  /** A layer with print effects, rendered to pixels; without this, effects are left out. */
+  effect?: (layer: Layer) => Promise<PlacedImage | null>
 }
 
 export interface WriteOptions {
@@ -155,6 +158,10 @@ class PageWriter {
   async layer(l: Layer): Promise<PDFOperator[]> {
     const ops: PDFOperator[] = [pushGraphicsState(), cm(frameMatrix(l))]
     if (l.opacity < 1) ops.push(setGraphicsState(this.opacity(Math.round(l.opacity * 1000) / 1000)))
+    if (hasEffects(l) && this.deps.effect) {
+      ops.push(...(await this.effect(l)), popGraphicsState())
+      return ops
+    }
     if (l.kind === 'shape') ops.push(...this.shape(l))
     if (l.kind === 'text') ops.push(...this.text(l))
     if (l.kind === 'censor') ops.push(...this.censor(l))
@@ -225,6 +232,25 @@ class PageWriter {
       )
     ops.push(popGraphicsState())
     return ops
+  }
+
+  /** A layer with effects: its render, placed over the area it covers. Copies of a cover share one. */
+  async effect(l: Layer): Promise<PDFOperator[]> {
+    const key = `fx:${fxKey(l)}`
+    let p = this.images.get(key)
+    if (!p) {
+      p = this.deps.effect!(l).then(async (placed) => {
+        if (!placed) return null
+        const img = placed.kind === 'png' ? await this.pdf.embedPng(placed.bytes) : await this.pdf.embedJpg(placed.bytes)
+        regions.set(img, placed.region)
+        return img
+      })
+      this.images.set(key, p)
+    }
+    const img = await p
+    if (!img) return []
+    const r = regions.get(img)!
+    return [cm([r.w, 0, 0, -r.h, r.x, r.y + r.h]), drawObject(this.xobject(img))]
   }
 
   async image(l: ImageLayer): Promise<PDFOperator[]> {

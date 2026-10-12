@@ -1,23 +1,15 @@
-import { useEffect, useMemo } from 'react'
-import { useFaces } from '../fonts/registry'
 import type { TextLayer } from '../model/doc'
 import { toSvgD } from '../model/path'
-import { layoutText } from '../model/text'
-import { useDoc } from '../store/doc'
+import type { TextLayout } from '../model/text'
+import { useTextLayout } from './textLayout'
 
 /** A text layer as outlines, set by the same engine that writes the PDF. */
 export function TextArt({ layer }: { layer: TextLayer }) {
-  const faces = useFaces(layer)
-  const { text, spans, sizePt, leadingPt, tracking, align, uppercase, w } = layer
-  const layout = useMemo(
-    () => (faces ? layoutText(faces, { text, spans, sizePt, leadingPt, tracking, align, uppercase, w }) : null),
-    [faces, text, spans, sizePt, leadingPt, tracking, align, uppercase, w],
-  )
-  const syncTextHeight = useDoc((s) => s.syncTextHeight)
-  useEffect(() => {
-    if (layout) syncTextHeight(layer.id, layout.height)
-  }, [layout, layer.id, syncTextHeight])
+  const { layout } = useTextLayout(layer)
+  return <TextPaths layer={layer} layout={layout} />
+}
 
+export function TextPaths({ layer, layout }: { layer: TextLayer; layout: TextLayout | null }) {
   if (!layout) return <rect width={layer.w} height={layer.h} fill={layer.color} opacity={0.08} />
   return (
     <>

@@ -1073,6 +1073,14 @@ input[type='range'].slider::-moz-range-thumb {
   outline: none;
 }
 
+/* one effect: its switch, then its settings */
+.fx-block {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--chassis-lo);
+}
+
 /* a slider with its reading beside it */
 .slider-row {
   display: grid;

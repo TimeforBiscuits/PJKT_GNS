@@ -45,6 +45,15 @@ white edge.
   set in Courier Prime (Regular, Medium or Bold), sized so the capitals
   fill the bar less a 2 pt gap. Draw it thicker and the type grows; words
   past the ends are cut off, and *Fit length* sizes the bar to them.
+- *Effects* (any layer): opacity, *Ben-Day dots* and *Distressed*.
+  - Ben-Day turns flat colour into Lichtenstein dots of that colour
+    (outlines stay solid) and pictures into a four-colour comic print.
+    *Strength* and *Dot size* set the look.
+  - Distressed wears the layer through to what's beneath: speckle,
+    patches, eaten edges and scuffs. *Wear* sets how much; *Shuffle*
+    picks another pattern.
+  - Both can be on at once. Layers with effects print as pictures at the
+    PDF's resolution; everything else stays vector.
 
 ## Printing
 
@@ -102,12 +111,12 @@ white edge.
 
 **v1.0**, October 2026.
 
-- [ ] **Requests, round 3:**
+- [x] **Requests, round 3:**
   - [x] Undo that can't get stuck, Undo/Redo keys, ⌘ shortcuts on Apple
   - [x] Copy and paste layers
   - [x] Opacity slider (Effects panel); text box in LCD teal on black
   - [x] TOP SECRET censor stripe
-  - [ ] Effects: Ben-Day dots and Distressed
+  - [x] Effects: Ben-Day dots and Distressed
 
 ## Development
 

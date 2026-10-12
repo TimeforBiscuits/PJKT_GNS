@@ -16,6 +16,27 @@ export interface Frame {
   rotation: number
 }
 
+/** Comic-print dots. On flat colour: solid dots of that colour; on pictures: a colour halftone. */
+export interface BenDay {
+  /** 0–100: how far the dots take over from solid colour. */
+  strength: number
+  /** Distance between dot centres, mm. */
+  dotMm: number
+}
+
+/** Wear and weather: speckle, scuffs and eaten edges, worn through to what's beneath. */
+export interface Distress {
+  /** 0–100 */
+  strength: number
+  /** Picks the pattern of wear; Shuffle picks another. */
+  seed: number
+}
+
+export interface Effects {
+  benday: BenDay | null
+  distress: Distress | null
+}
+
 interface LayerBase extends Frame {
   id: string
   name: string
@@ -23,6 +44,8 @@ interface LayerBase extends Frame {
   locked: boolean
   /** 0–1 */
   opacity: number
+  /** Print effects; absent on layers made before effects existed. */
+  effects?: Effects
 }
 
 export interface ImageLayer extends LayerBase {
@@ -149,5 +172,7 @@ export const bleedFrame = (c: Cover): Frame => {
   const t = coverSize(c)
   return { x: -BLEED_MM, y: -BLEED_MM, w: t.w + 2 * BLEED_MM, h: t.h + 2 * BLEED_MM, rotation: 0 }
 }
+
+export const hasEffects = (l: { effects?: Effects }) => !!(l.effects && (l.effects.benday || l.effects.distress))
 
 export const layerLabel: Record<LayerKind, string> = { image: 'Image', shape: 'Shape', text: 'Text', censor: 'Top secret' }

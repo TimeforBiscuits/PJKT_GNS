@@ -3,6 +3,9 @@ import type { ImageLayer } from '../model/doc'
 import { PRINTERS } from '../model/imposition'
 import { MM_PER_INCH } from '../model/units'
 import { fileSync, fontEntry, fontSync, loadCensorFont, loadFont, loadTextFonts } from '../fonts/registry'
+import { facesFor } from '../fonts/variants'
+import { renderFx, type FxEnv } from '../effects/render'
+import { CENSOR_FAMILY, censorFace, censorFontWeight } from '../model/censor'
 import { useAssets, type Asset } from '../store/assets'
 import { useDoc } from '../store/doc'
 import { useEditor } from '../store/editor'
@@ -113,6 +116,29 @@ async function browserDeps(sheets: Sheet[], dpi: number, onImage?: () => void): 
       const out = await rasterize(layer, asset, dpi)
       onImage?.()
       return out
+    },
+    effect: async (layer) => {
+      const env: FxEnv = {}
+      if (layer.kind === 'text') env.faces = facesFor(layer, (f) => fileSync(f)!)
+      if (layer.kind === 'censor') env.censor = censorFace(fontSync(CENSOR_FAMILY, censorFontWeight(layer.weight))!, layer.weight)
+      let img: HTMLImageElement | null = null
+      if (layer.kind === 'image') {
+        const asset = assets[layer.assetId]
+        if (!asset) return null
+        img = await loadImage(asset.blob)
+        env.picture = img
+      }
+      try {
+        // Effects are pictures in the PDF, at the chosen resolution.
+        const r = renderFx(layer, env, dpi / MM_PER_INCH, maxPixels())
+        if (!r) return null
+        const bytes = r.opaque ? await toBytes(r.canvas, 'image/jpeg', 0.93) : await toBytes(r.canvas, 'image/png')
+        r.canvas.width = r.canvas.height = 0
+        onImage?.()
+        return { bytes, kind: r.opaque ? 'jpg' : 'png', region: r.box }
+      } finally {
+        if (img) URL.revokeObjectURL(img.src)
+      }
     },
   }
 }
