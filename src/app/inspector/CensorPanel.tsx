@@ -7,6 +7,7 @@ import { mmToPt } from '../../model/units'
 import { useDoc } from '../../store/doc'
 import { ColorRow } from '../../ui/ColorRow'
 import { Key, LcdField, Panel, Segmented, Toggle } from '../../ui/controls'
+import { KnockoutNote } from './TextPanel'
 
 /** The TOP SECRET stripe: its words, weight and colours. Its thickness sets the type size. */
 export function CensorPanel({ layer }: { layer: CensorLayer }) {
@@ -122,7 +123,14 @@ export function CensorPanel({ layer }: { layer: CensorLayer }) {
       </p>
 
       <ColorRow label="Stripe" allowNone={false} value={layer.fill} onChange={(c) => set({ fill: c ?? '#0d0d0c' })} />
-      <ColorRow label="Letters" allowNone={false} value={layer.color} onChange={(c) => set({ color: c ?? '#edeef0' })} />
+      <Toggle on={!!layer.knockout} onChange={(knockout) => set({ knockout })}>
+        Knockout letters
+      </Toggle>
+      {layer.knockout ? (
+        <KnockoutNote />
+      ) : (
+        <ColorRow label="Letters" allowNone={false} value={layer.color} onChange={(c) => set({ color: c ?? '#edeef0' })} />
+      )}
     </Panel>
   )
 }

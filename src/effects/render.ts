@@ -1,5 +1,5 @@
 import { layoutCensor } from '../model/censor'
-import type { CensorLayer, ImageLayer, Layer, ShapeLayer, TextLayer } from '../model/doc'
+import { letterColor, type CensorLayer, type ImageLayer, type Layer, type ShapeLayer, type TextLayer } from '../model/doc'
 import type { Box } from '../model/geometry'
 import { isClosed, rectPath, shapePath, toSvgD } from '../model/path'
 import { layoutText, type Face, type FaceFor } from '../model/text'
@@ -75,10 +75,10 @@ function drawShape(ctx: CanvasRenderingContext2D, s: ShapeLayer, pass: Pass) {
 
 function drawText(ctx: CanvasRenderingContext2D, t: TextLayer, faces: FaceFor) {
   const { path, stroke } = layoutText(faces, t)
-  ctx.fillStyle = t.color
+  ctx.fillStyle = letterColor(t)
   ctx.fill(new Path2D(toSvgD(path)))
   if (stroke) {
-    ctx.strokeStyle = t.color
+    ctx.strokeStyle = letterColor(t)
     ctx.lineWidth = stroke.width
     ctx.lineJoin = 'round'
     ctx.stroke(new Path2D(toSvgD(stroke.path)))
@@ -97,10 +97,10 @@ function drawCensor(ctx: CanvasRenderingContext2D, c: CensorLayer, face: Face, p
   ctx.beginPath()
   ctx.rect(0, 0, c.w, c.h)
   ctx.clip()
-  ctx.fillStyle = c.color
+  ctx.fillStyle = letterColor(c)
   ctx.fill(new Path2D(toSvgD(path)))
   if (stroke) {
-    ctx.strokeStyle = c.color
+    ctx.strokeStyle = letterColor(c)
     ctx.lineWidth = stroke.width
     ctx.lineJoin = 'round'
     ctx.stroke(new Path2D(toSvgD(stroke.path)))

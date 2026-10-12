@@ -234,6 +234,65 @@ describe('PDF output', () => {
     expect(img.at(X(45), Y(38))).toBeGreaterThan(200)
   })
 
+  it.skipIf(!hasPoppler)('prints knockout letters as bare paper, whatever their colour and whatever is beneath', async () => {
+    const stripe: CensorLayer = {
+      id: uid('ly'),
+      kind: 'censor',
+      name: 'Top secret',
+      hidden: false,
+      locked: false,
+      opacity: 1,
+      x: 20,
+      y: 80,
+      w: 110,
+      h: 10,
+      rotation: 0,
+      ...CENSOR_DEFAULTS,
+    }
+    const grey: TextLayer = { ...words, color: '#808080' }
+    const page = async (knockout: boolean) => {
+      // the words sit on the black block, the stripe on top of both
+      const cover: Cover = { ...newCover('notebook', 1), layers: [block(0, 0, 180, 140), { ...grey, knockout }, { ...stripe, knockout }] }
+      const { bytes, sheets } = await build(cover, 1)
+      return { img: render(bytes), t: sheets[0].layout.placements[0].trim }
+    }
+    /** Pixels left as bare paper (pure white) in an area of the cover, mm. */
+    const bare = ({ img, t }: Awaited<ReturnType<typeof page>>, x0: number, y0: number, x1: number, y1: number) => {
+      let n = 0
+      for (let y = Math.round((t.y + y0) * 10); y < (t.y + y1) * 10; y++)
+        for (let x = Math.round((t.x + x0) * 10); x < (t.x + x1) * 10; x++) if (img.at(x, y) === 255) n++
+      return n
+    }
+    const inked = await page(false)
+    const knocked = await page(true)
+    // Grey words and the stripe's off-white letters both leave some toner.
+    expect(bare(inked, 100, 20, 170, 45)).toBe(0)
+    expect(bare(inked, 21, 81, 129, 89)).toBe(0)
+    // Knocked out, they print nothing at all.
+    expect(bare(knocked, 100, 20, 170, 45)).toBeGreaterThan(5000)
+    expect(bare(knocked, 21, 81, 129, 89)).toBeGreaterThan(500)
+    // The stripe itself still prints.
+    expect(knocked.img.at(Math.round((knocked.t.x + 20.5) * 10), Math.round((knocked.t.y + 85) * 10))).toBeLessThan(40)
+  })
+
+  it.skipIf(!hasPoppler)('never prints the paper colour of a cover made for card stock', async () => {
+    const page = async (card: boolean) => {
+      const cover: Cover = { ...newCover('notebook', 1), background: '#3355aa', card, layers: [block(60, 40, 60, 60)] }
+      const { bytes, sheets } = await build(cover, 1)
+      const img = render(bytes)
+      const t = sheets[0].layout.placements[0].trim
+      return (xmm: number, ymm: number) => img.at(Math.round((t.x + xmm) * 10), Math.round((t.y + ymm) * 10))
+    }
+    const printed = await page(false)
+    const onCard = await page(true)
+    expect(printed(20, 20)).toBeLessThan(200)
+    expect(printed(-1, 70)).toBeLessThan(200) // into the bleed
+    expect(onCard(20, 20)).toBe(255)
+    expect(onCard(-1, 70)).toBe(255)
+    // the artwork on it still prints
+    expect(onCard(90, 70)).toBeLessThan(40)
+  })
+
   it.skipIf(!hasPoppler)('places an effect render exactly over its layer', async () => {
     // A 1 × 1 black PNG stands in for the render; it should fill the box it's given.
     const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNgAAAAAgABSK+kcQAAAABJRU5ErkJggg=='), (c) => c.charCodeAt(0))

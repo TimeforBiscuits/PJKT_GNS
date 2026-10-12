@@ -48,6 +48,8 @@ function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; 
   const S: Rect = { x: sx(0), y: sy(0), w: A4.w * z, h: A4.h * z }
   const { layout } = sheet
   const P = layout.printable
+  // Covers made for card stock are printed on it: the whole sheet is the card.
+  const paper = sheet.covers.find((c) => c?.card)?.background ?? '#fff'
   const rectPath = (r: Rect) => `M${r.x} ${r.y}h${r.w}v${r.h}h${-r.w}Z`
   const period = CUT_DASH + CUT_GAP
 
@@ -62,7 +64,7 @@ function SheetView({ sheet, index, count, cam }: { sheet: Sheet; index: number; 
       </defs>
       <rect x={S.x + 6} y={S.y + 6} width={S.w} height={S.h} fill="rgba(0,0,0,0.55)" />
       <g transform={`translate(${cam.x} ${cam.y + oy * z}) scale(${z})`}>
-        <rect x={0} y={0} width={A4.w} height={A4.h} fill="#fff" />
+        <rect x={0} y={0} width={A4.w} height={A4.h} fill={paper} />
         {layout.placements.map((p, i) => {
           const cover = sheet.covers[i]
           return cover ? (

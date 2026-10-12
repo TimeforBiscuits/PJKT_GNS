@@ -40,6 +40,8 @@ export interface ToolStyle {
   textAlign: TextAlign
   uppercase: boolean
   textColor: string
+  /** New text prints no ink in its letters. */
+  textKnockout: boolean
 }
 
 const CALIBRATION_KEY = 'pjkt_gns.pxPerMm'
@@ -127,6 +129,7 @@ export const useEditor = create<EditorState>((set) => ({
     textAlign: 'left',
     uppercase: false,
     textColor: '#111111',
+    textKnockout: false,
   },
   calibrating: false,
   printerId: 'pixma',

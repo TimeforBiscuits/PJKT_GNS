@@ -57,6 +57,16 @@ white edge.
     *Wear* sets how much; *Shuffle* picks another pattern.
   - Both can be on at once. Layers with effects print as pictures at the
     PDF's resolution; everything else stays vector.
+- *Knockout* (Text, and *Knockout letters* on a Secret stripe) makes the
+  letters print no ink at all, whatever their colour and whatever lies
+  beneath, so the paper or card shows through them. Printers have no white
+  ink (pure white is simply left unprinted), so this is the sure way to set
+  type out of black onto coloured card; an off-white, like the stripe's
+  default letters, still leaves a faint tint.
+- *Card stock* (Document, under *Paper*) is for printing onto coloured card.
+  The paper colour becomes the card's own: shown on screen, never printed.
+  The artwork shows as ink landing on it, so white and knockouts show the
+  card, and the print view shows the whole sheet in that colour.
 
 ## Printing
 
@@ -122,6 +132,9 @@ white edge.
   - [x] Opacity slider (Effects panel); text box in LCD teal on black
   - [x] TOP SECRET censor stripe
   - [x] Effects: Ben-Day dots and Distressed
+- [x] **Requests, round 4:**
+  - [x] Knockout letters for text and TOP SECRET stripes
+  - [x] Card stock: see the coloured card on screen, never print it
 
 ## Development
 

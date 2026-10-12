@@ -16,6 +16,7 @@ interface TypeStyle {
   align: TextAlign
   uppercase: boolean
   color: string
+  knockout: boolean
 }
 
 const WEIGHT_NAMES: Record<number, string> = { 400: 'Reg', 500: 'Med', 700: 'Bold', 800: 'XBold', 900: 'Black' }
@@ -143,11 +144,30 @@ function TypeControls({ value, onChange }: { value: TypeStyle; onChange: (p: Par
           />
         </div>
       </div>
-      <Toggle on={value.uppercase} onChange={(uppercase) => onChange({ uppercase })}>
-        All caps
-      </Toggle>
-      <ColorRow label="Colour" allowNone={false} value={value.color} onChange={(c) => onChange({ color: c ?? '#111111' })} />
+      <div className="grid-2">
+        <Toggle on={value.uppercase} onChange={(uppercase) => onChange({ uppercase })}>
+          All caps
+        </Toggle>
+        <Toggle on={value.knockout} onChange={(knockout) => onChange({ knockout })}>
+          Knockout
+        </Toggle>
+      </div>
+      {value.knockout ? (
+        <KnockoutNote />
+      ) : (
+        <ColorRow label="Colour" allowNone={false} value={value.color} onChange={(c) => onChange({ color: c ?? '#111111' })} />
+      )}
     </>
+  )
+}
+
+/** What a knockout does, in place of the colour it no longer uses. */
+export function KnockoutNote() {
+  return (
+    <p className="note">
+      The letters print <b>no ink</b>, whatever is beneath them, so the card shows through. To see its colour
+      here, turn on <b>Card stock</b> (Document) and set Paper to your card.
+    </p>
   )
 }
 
@@ -196,7 +216,7 @@ export function TextPanel({ layer }: { layer: TextLayer }) {
         />
         <StyleKeys editor={editor} active={active} />
       </div>
-      <TypeControls value={{ ...layer }} onChange={(p) => update<TextLayer>(layer.id, p)} />
+      <TypeControls value={{ ...layer, knockout: !!layer.knockout }} onChange={(p) => update<TextLayer>(layer.id, p)} />
     </Panel>
   )
 }
@@ -214,6 +234,7 @@ export function TextToolPanel() {
     align: st.textAlign,
     uppercase: st.uppercase,
     color: st.textColor,
+    knockout: st.textKnockout,
   }
   return (
     <Panel num="03" it="TESTO" en="New text">
@@ -229,6 +250,7 @@ export function TextToolPanel() {
             ...(p.align !== undefined && { textAlign: p.align }),
             ...(p.uppercase !== undefined && { uppercase: p.uppercase }),
             ...(p.color !== undefined && { textColor: p.color }),
+            ...(p.knockout !== undefined && { textKnockout: p.knockout }),
           })
         }
       />

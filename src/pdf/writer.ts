@@ -31,7 +31,7 @@ import {
 import type { Sheet } from '../model/compose'
 import { CENSOR_FAMILY, censorFace, censorFontWeight, layoutCensor } from '../model/censor'
 import type { CensorLayer, Cover, ImageLayer, Layer, ShapeLayer, TextLayer } from '../model/doc'
-import { bleedFrame, hasEffects } from '../model/doc'
+import { bleedFrame, hasEffects, letterColor } from '../model/doc'
 import { fxKey } from '../effects/key'
 import { frameMatrix, mul, rotate, translate, type Box, type Mat } from '../model/geometry'
 import { CUT_DASH, CUT_GAP, CUT_WIDTH, type CutLine, type Placement } from '../model/imposition'
@@ -151,7 +151,8 @@ class PageWriter {
     const ops: PDFOperator[] = [pushGraphicsState(), cm(place)]
     // Nothing escapes the bleed.
     ops.push(...pathOps(rectPath(b.x, b.y, b.w, b.h)), clip(), endPath())
-    ops.push(setFillingRgbColor(...hexRgb(cover.background)), ...pathOps(rectPath(b.x, b.y, b.w, b.h)), fill())
+    // On card stock the paper colour is the card itself: nothing to print.
+    if (!cover.card) ops.push(setFillingRgbColor(...hexRgb(cover.background)), ...pathOps(rectPath(b.x, b.y, b.w, b.h)), fill())
     for (const l of cover.layers) if (!l.hidden) ops.push(...(await this.layer(l)))
     ops.push(popGraphicsState())
     this.page.pushOperators(...ops)
@@ -201,11 +202,12 @@ class PageWriter {
     const faces = facesFor(t, (f) => this.deps.font(f.entry.family, f.weight, f.italic))!
     const { path, stroke: bold } = layoutText(faces, t)
     if (!path.length) return []
-    const ops = [setFillingRgbColor(...hexRgb(t.color)), ...pathOps(path), fill()]
+    const ink = hexRgb(letterColor(t))
+    const ops = [setFillingRgbColor(...ink), ...pathOps(path), fill()]
     if (bold) {
       // Synthetic bold: thicken the outlines with a stroke in the same colour.
       ops.push(
-        setStrokingRgbColor(...hexRgb(t.color)),
+        setStrokingRgbColor(...ink),
         setLineWidth(bold.width),
         setLineJoin(LineJoinStyle.Round),
         ...pathOps(bold.path),
@@ -223,10 +225,11 @@ class PageWriter {
     const { path, stroke: thick } = layoutCensor(face, c)
     if (!path.length) return ops
     ops.push(pushGraphicsState(), ...pathOps(bar), clip(), endPath())
-    ops.push(setFillingRgbColor(...hexRgb(c.color)), ...pathOps(path), fill())
+    const ink = hexRgb(letterColor(c))
+    ops.push(setFillingRgbColor(...ink), ...pathOps(path), fill())
     if (thick)
       ops.push(
-        setStrokingRgbColor(...hexRgb(c.color)),
+        setStrokingRgbColor(...ink),
         setLineWidth(thick.width),
         setLineJoin(LineJoinStyle.Round),
         ...pathOps(thick.path),

@@ -245,6 +245,7 @@ function textDefaults(at: Pt): TextLayer {
     color: st.textColor,
     uppercase: st.uppercase,
     spans: [],
+    ...(st.textKnockout && { knockout: true }),
   }
 }
 

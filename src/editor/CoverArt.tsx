@@ -18,10 +18,21 @@ import { TextArt } from './TextArt'
  */
 export const CoverArt = memo(function CoverArt({ cover, idp }: { cover: Cover; idp: string }) {
   const b = bleedFrame(cover)
+  const paper = <rect x={b.x} y={b.y} width={b.w} height={b.h} fill={cover.background} />
+  const layers = cover.layers.map((l) => (l.hidden ? null : <LayerArt key={l.id} layer={l} idp={idp} />))
+  if (!cover.card)
+    return (
+      <g>
+        {paper}
+        {layers}
+      </g>
+    )
+  // On card stock the paper colour is the card: ink can only darken it, and
+  // white (no ink) leaves it showing — so the artwork multiplies onto it.
   return (
-    <g>
-      <rect x={b.x} y={b.y} width={b.w} height={b.h} fill={cover.background} />
-      {cover.layers.map((l) => (l.hidden ? null : <LayerArt key={l.id} layer={l} idp={idp} />))}
+    <g style={{ isolation: 'isolate' }}>
+      {paper}
+      <g style={{ mixBlendMode: 'multiply' }}>{layers}</g>
     </g>
   )
 })

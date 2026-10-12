@@ -53,6 +53,22 @@ export function DocumentPanel() {
           })
         }
       />
+      <Toggle
+        on={!!cover.card}
+        onChange={(on) =>
+          edit((_, cv) => {
+            cv.card = on
+          })
+        }
+      >
+        Card stock
+      </Toggle>
+      {cover.card && (
+        <p className="note">
+          Paper is now the card you print on: shown here, never printed. The artwork shows as ink on that card — white
+          prints no ink, so it shows as card.
+        </p>
+      )}
       <div className="grid-2">
         <Toggle on={guides.bleed} onChange={() => toggleGuide('bleed')} chip="var(--guide-bleed)">
           Bleed

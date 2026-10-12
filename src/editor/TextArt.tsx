@@ -1,4 +1,4 @@
-import type { TextLayer } from '../model/doc'
+import { letterColor, type TextLayer } from '../model/doc'
 import { toSvgD } from '../model/path'
 import type { TextLayout } from '../model/text'
 import { useTextLayout } from './textLayout'
@@ -10,12 +10,13 @@ export function TextArt({ layer }: { layer: TextLayer }) {
 }
 
 export function TextPaths({ layer, layout }: { layer: TextLayer; layout: TextLayout | null }) {
-  if (!layout) return <rect width={layer.w} height={layer.h} fill={layer.color} opacity={0.08} />
+  const ink = letterColor(layer)
+  if (!layout) return <rect width={layer.w} height={layer.h} fill={ink} opacity={0.08} />
   return (
     <>
-      <path d={toSvgD(layout.path)} fill={layer.color} />
+      <path d={toSvgD(layout.path)} fill={ink} />
       {layout.stroke && (
-        <path d={toSvgD(layout.stroke.path)} fill="none" stroke={layer.color} strokeWidth={layout.stroke.width} strokeLinejoin="round" />
+        <path d={toSvgD(layout.stroke.path)} fill="none" stroke={ink} strokeWidth={layout.stroke.width} strokeLinejoin="round" />
       )}
     </>
   )

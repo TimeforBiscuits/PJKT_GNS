@@ -99,6 +99,8 @@ export interface TextLayer extends LayerBase {
   uppercase: boolean
   /** Bold/italic words; sorted, non-overlapping. */
   spans: TextSpan[]
+  /** The letters print no ink, whatever their colour, so the paper or card shows through. */
+  knockout?: boolean
 }
 
 export type CensorWeight = 'regular' | 'medium' | 'bold'
@@ -122,6 +124,8 @@ export interface CensorLayer extends LayerBase {
   fill: string
   /** The letters. */
   color: string
+  /** The letters print no ink, whatever their colour, so the paper or card shows through. */
+  knockout?: boolean
 }
 
 export type Layer = ImageLayer | ShapeLayer | TextLayer | CensorLayer
@@ -133,6 +137,8 @@ export interface Cover {
   formatId: FormatId
   /** Paper colour under everything, running into the bleed. */
   background: string
+  /** The paper colour is the card printed on: shown on screen, never printed. */
+  card?: boolean
   /** Bottom to top. */
   layers: Layer[]
 }
@@ -172,6 +178,15 @@ export const bleedFrame = (c: Cover): Frame => {
   const t = coverSize(c)
   return { x: -BLEED_MM, y: -BLEED_MM, w: t.w + 2 * BLEED_MM, h: t.h + 2 * BLEED_MM, rotation: 0 }
 }
+
+/**
+ * Pure white: printers have no white ink, so this is where they print nothing
+ * and the paper shows. Knockout letters are set in it.
+ */
+export const NO_INK = '#ffffff'
+
+/** The colour a text layer's or stripe's letters print in. */
+export const letterColor = (l: TextLayer | CensorLayer) => (l.knockout ? NO_INK : l.color)
 
 export const hasEffects = (l: { effects?: Effects }) => !!(l.effects && (l.effects.benday || l.effects.distress))
 
