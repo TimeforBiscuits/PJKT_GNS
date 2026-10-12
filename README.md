@@ -41,6 +41,10 @@ white edge.
   a keyboard they are ⌘Z, ⌘⇧Z, ⌘C, ⌘V on Mac and iPad (Ctrl on Windows).
   A pasted layer keeps its size, type and formatting; pasted onto another
   cover it lands in the same spot.
+- *Secret* (S) draws a TOP SECRET stripe: a #0d0d0c bar whose words are
+  set in Courier Prime (Regular, Medium or Bold), sized so the capitals
+  fill the bar less a 2 pt gap. Draw it thicker and the type grows; words
+  past the ends are cut off, and *Fit length* sizes the bar to them.
 
 ## Printing
 
@@ -102,7 +106,7 @@ white edge.
   - [x] Undo that can't get stuck, Undo/Redo keys, ⌘ shortcuts on Apple
   - [x] Copy and paste layers
   - [x] Opacity slider (Effects panel); text box in LCD teal on black
-  - [ ] TOP SECRET censor stripe
+  - [x] TOP SECRET censor stripe
   - [ ] Effects: Ben-Day dots and Distressed
 
 ## Development
@@ -131,7 +135,7 @@ src/
 
 ### Fonts
 
-The cover library holds 56 families (46 of them sans-serif), Latin subsets
+The cover library holds 57 families (46 of them sans-serif), Latin subsets
 of the upright and (where they exist) italic styles, taken from the [Fontsource](https://fontsource.org)
 packages of Google Fonts. All are free to use in print; see
 `public/fonts/LICENSES.txt`. To change the list, edit

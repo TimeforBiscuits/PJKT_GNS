@@ -8,7 +8,8 @@ import { describe, expect, it } from 'vitest'
 import catalog from '../fonts/catalog.json'
 import { composeSheets } from '../model/compose'
 import { newSheet } from '../model/sheets'
-import { newCover, uid, type Cover, type ShapeLayer, type TextLayer } from '../model/doc'
+import { CENSOR_DEFAULTS } from '../model/censor'
+import { newCover, uid, type CensorLayer, type Cover, type ShapeLayer, type TextLayer } from '../model/doc'
 import { PRINTERS } from '../model/imposition'
 import type { ShapingFont } from '../model/text'
 import { writeSheetsPdf, writeTestPagePdf, type WriterDeps } from './writer'
@@ -194,6 +195,43 @@ describe('PDF output', () => {
       expect(img.at(x0, y)).toBeGreaterThan(100)
       expect(img.at(x1, y)).toBeGreaterThan(100)
     }
+  })
+
+  it.skipIf(!hasPoppler)('prints a TOP SECRET stripe with its type inside the gaps', async () => {
+    const stripe: CensorLayer = {
+      id: uid('ly'),
+      kind: 'censor',
+      name: 'Top secret',
+      hidden: false,
+      locked: false,
+      opacity: 1,
+      x: 20,
+      y: 40,
+      w: 110,
+      h: 10,
+      rotation: 0,
+      ...CENSOR_DEFAULTS,
+    }
+    const cover: Cover = { ...newCover('notebook', 1), layers: [stripe] }
+    const { bytes, sheets } = await build(cover, 1)
+    const img = render(bytes)
+    const t = sheets[0].layout.placements[0].trim
+    const X = (mm: number) => Math.round((t.x + mm) * 10)
+    const Y = (mm: number) => Math.round((t.y + mm) * 10)
+    const light = (y: number) => {
+      let n = 0
+      for (let x = X(21); x < X(129); x++) if (img.at(x, y) > 128) n++
+      return n
+    }
+    // the stripe is dark from end to end
+    expect(img.at(X(20.5), Y(45))).toBeLessThan(40)
+    expect(img.at(X(129.5), Y(45))).toBeLessThan(40)
+    // letters show in the middle, never in the 2 pt gaps above and below
+    expect(light(Y(45))).toBeGreaterThan(50)
+    expect(light(Y(40.3))).toBe(0)
+    expect(light(Y(49.7))).toBe(0)
+    // and nothing outside the stripe
+    expect(img.at(X(45), Y(38))).toBeGreaterThan(200)
   })
 
   it.skipIf(!hasPoppler)('draws the test page’s 100 mm square at true size', async () => {

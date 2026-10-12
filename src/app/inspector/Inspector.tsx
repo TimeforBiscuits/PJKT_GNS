@@ -1,5 +1,6 @@
 import { useDoc, useSelectedLayer } from '../../store/doc'
 import { useEditor } from '../../store/editor'
+import { CensorPanel } from './CensorPanel'
 import { CoversPanel } from './CoversPanel'
 import { DocumentPanel } from './DocumentPanel'
 import { EditStrip } from './EditStrip'
@@ -38,6 +39,7 @@ export function Inspector() {
           {layer.kind === 'image' && <ImagePanel layer={layer} />}
           {layer.kind === 'shape' && <ShapePanel layer={layer} />}
           {layer.kind === 'text' && <TextPanel layer={layer} />}
+          {layer.kind === 'censor' && <CensorPanel layer={layer} />}
           <EffectsPanel layer={layer} />
         </>
       ) : (

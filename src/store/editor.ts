@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { LineCap, StrokeAlign, TextAlign } from '../model/doc'
 import { CSS_PX_PER_MM } from '../model/units'
 
-export type ToolId = 'select' | 'rect' | 'ellipse' | 'polygon' | 'line' | 'text' | 'hand'
+export type ToolId = 'select' | 'rect' | 'ellipse' | 'polygon' | 'line' | 'text' | 'censor' | 'hand'
 
 export type ViewId = 'cover' | 'sheet'
 

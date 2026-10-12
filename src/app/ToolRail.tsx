@@ -16,7 +16,7 @@ export function ToolRail() {
               className="tool"
               pressed={t.id === 'image' ? undefined : tool === t.id}
               onClick={() => pressTool(t.id)}
-              title={t.id === 'image' ? `Import pictures (${t.key})` : `${t.label} (${t.key})`}
+              title={t.id === 'image' ? `Import pictures (${t.key})` : t.id === 'censor' ? `TOP SECRET stripe (${t.key})` : `${t.label} (${t.key})`}
             >
               <Led on={tool === t.id} />
               <span className="shortcut">{t.key}</span>

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { uid, type Frame, type ImageLayer, type Layer, type ShapeKind, type ShapeLayer, type TextLayer } from '../model/doc'
+import { CENSOR_DEFAULTS } from '../model/censor'
+import { uid, type CensorLayer, type Frame, type ImageLayer, type Layer, type ShapeKind, type ShapeLayer, type TextLayer } from '../model/doc'
 import { apply, dist, frameCenter, frameMatrix, invert, normDeg, reframe, toLocal, type Mat, type Pt } from '../model/geometry'
 import { FORMATS, SAFE_MM } from '../model/formats'
 import { ptToMm } from '../model/units'
@@ -49,7 +50,7 @@ type Gesture =
   | { kind: 'line-end'; id: string; fixed: Pt }
   | { kind: 'content-pan'; id: string; start: Pt; content0: ImageLayer['content'] }
   | { kind: 'content-scale'; id: string; anchor: Pt; content0: ImageLayer['content'] }
-  | { kind: 'draw'; id: string; start: Pt; shape: ShapeKind }
+  | { kind: 'draw'; id: string; start: Pt; shape: ShapeKind | 'censor' }
   | { kind: 'text-place' }
 
 /** Grab radius in screen pixels: fingers need more room than a mouse. */
@@ -195,6 +196,23 @@ function shapeDefaults(shape: ShapeKind, frame: Frame): ShapeLayer {
     strokeWidthPt: st.strokeWidthPt,
     strokeAlign: st.strokeAlign,
     cap: st.cap,
+  }
+}
+
+/** A standard TOP SECRET stripe: just long enough for its two words. */
+const CENSOR_W = 62
+const CENSOR_H = 7
+
+function censorDefaults(frame: Frame): CensorLayer {
+  return {
+    id: uid('ly'),
+    kind: 'censor',
+    name: 'Top secret',
+    hidden: false,
+    locked: false,
+    opacity: 1,
+    ...frame,
+    ...CENSOR_DEFAULTS,
   }
 }
 
@@ -388,7 +406,7 @@ function moveGesture(e: ScenePointer) {
       }
       let w = p.x - g.start.x
       let h = p.y - g.start.y
-      if (e.shift) {
+      if (e.shift && g.shape !== 'censor') {
         const s = Math.max(Math.abs(w), Math.abs(h))
         w = Math.sign(w || 1) * s
         h = Math.sign(h || 1) * s
@@ -415,6 +433,14 @@ const constrain45 = (a: Pt, p: Pt): Pt => {
 function finishDraw(g: Extract<Gesture, { kind: 'draw' }>, e: ScenePointer) {
   const layer = selectedLayer()
   if (!layer) return
+  if (g.shape === 'censor') {
+    // A tap drops a standard stripe; a stroke too thin to read gets the standard thickness.
+    if (layer.w < 1 && layer.h < 1) update(g.id, { x: e.world.x - CENSOR_W / 2, y: e.world.y - CENSOR_H / 2, w: CENSOR_W, h: CENSOR_H })
+    else if (layer.h < 2) update(g.id, { y: layer.y + layer.h / 2 - CENSOR_H / 2, h: CENSOR_H, w: Math.max(layer.w, 10) })
+    else if (layer.w < 5) update(g.id, { w: CENSOR_W })
+    useEditor.getState().setTool('select')
+    return
+  }
   const tiny = g.shape === 'line' ? layer.w < 1 : layer.w < 1 || layer.h < 1
   if (tiny) {
     // A tap rather than a drag: drop a standard-size shape centred there.
@@ -440,6 +466,14 @@ export const coverHandlers: SceneHandlers = {
       doc.beginGesture()
       doc.addLayer(layer)
       gesture = { kind: 'draw', id: layer.id, start, shape: tool }
+      return true
+    }
+    if (tool === 'censor') {
+      const start = snapPoint(e.world, '', e.alt)
+      const layer = censorDefaults({ x: start.x, y: start.y, w: 0, h: 0, rotation: 0 })
+      doc.beginGesture()
+      doc.addLayer(layer)
+      gesture = { kind: 'draw', id: layer.id, start, shape: 'censor' }
       return true
     }
     if (tool === 'text') {

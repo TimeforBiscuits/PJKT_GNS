@@ -78,7 +78,30 @@ export interface TextLayer extends LayerBase {
   spans: TextSpan[]
 }
 
-export type Layer = ImageLayer | ShapeLayer | TextLayer
+export type CensorWeight = 'regular' | 'medium' | 'bold'
+
+/**
+ * TOP SECRET: a dark stripe that is also one line of type. The type is sized
+ * by the stripe's thickness (h), so drawing it thicker sets it bigger; type
+ * running past the ends is cut off, like a real censor bar.
+ */
+export interface CensorLayer extends LayerBase {
+  kind: 'censor'
+  text: string
+  weight: CensorWeight
+  /** Gap between the capitals and the stripe's long edges, in points. */
+  insetPt: number
+  /** Thousandths of an em added between letters. */
+  tracking: number
+  align: TextAlign
+  uppercase: boolean
+  /** The stripe. */
+  fill: string
+  /** The letters. */
+  color: string
+}
+
+export type Layer = ImageLayer | ShapeLayer | TextLayer | CensorLayer
 export type LayerKind = Layer['kind']
 
 export interface Cover {
@@ -127,4 +150,4 @@ export const bleedFrame = (c: Cover): Frame => {
   return { x: -BLEED_MM, y: -BLEED_MM, w: t.w + 2 * BLEED_MM, h: t.h + 2 * BLEED_MM, rotation: 0 }
 }
 
-export const layerLabel: Record<LayerKind, string> = { image: 'Image', shape: 'Shape', text: 'Text' }
+export const layerLabel: Record<LayerKind, string> = { image: 'Image', shape: 'Shape', text: 'Text', censor: 'Top secret' }

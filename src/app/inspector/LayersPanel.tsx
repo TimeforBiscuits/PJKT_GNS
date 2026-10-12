@@ -2,17 +2,22 @@ import type { Layer } from '../../model/doc'
 import { useActiveCover, useDoc } from '../../store/doc'
 import { sampleLayers } from '../../editor/sample'
 import { Key, Panel } from '../../ui/controls'
-import { IconEllipse, IconImage, IconLine, IconPolygon, IconRect, IconText } from '../../ui/icons'
+import { IconEllipse, IconImage, IconLine, IconPolygon, IconRect, IconShush, IconText } from '../../ui/icons'
 
 const icon = (l: Layer) => {
   if (l.kind === 'image') return <IconImage />
   if (l.kind === 'text') return <IconText />
+  if (l.kind === 'censor') return <IconShush />
   return { rect: <IconRect />, ellipse: <IconEllipse />, polygon: <IconPolygon />, line: <IconLine /> }[l.shape]
 }
 
 /** Unnamed text layers go by their first line. */
 const displayName = (l: Layer) =>
-  l.kind === 'text' && l.name === 'Text' ? l.text.split('\n')[0].trim().slice(0, 32) || 'Text' : l.name
+  l.kind === 'text' && l.name === 'Text'
+    ? l.text.split('\n')[0].trim().slice(0, 32) || 'Text'
+    : l.kind === 'censor' && l.name === 'Top secret'
+      ? l.text.trim().slice(0, 32) || 'Top secret'
+      : l.name
 
 /** The cover's stack, topmost first. */
 export function LayersPanel() {

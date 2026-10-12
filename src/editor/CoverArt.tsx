@@ -4,6 +4,7 @@ import { frameMatrix, svgMatrix } from '../model/geometry'
 import { isClosed, shapePath, toSvgD } from '../model/path'
 import { ptToMm } from '../model/units'
 import { useAssets } from '../store/assets'
+import { CensorArt } from './CensorArt'
 import { flipMatrix } from './draw'
 import { TextArt } from './TextArt'
 
@@ -31,6 +32,7 @@ export const LayerArt = memo(function LayerArt({ layer, idp }: { layer: Layer; i
       {layer.kind === 'image' && <ImageArt layer={layer} idp={idp} />}
       {layer.kind === 'shape' && <ShapeArt layer={layer} idp={idp} />}
       {layer.kind === 'text' && <TextArt layer={layer as TextLayer} />}
+      {layer.kind === 'censor' && <CensorArt layer={layer} idp={idp} />}
     </g>
   )
 })

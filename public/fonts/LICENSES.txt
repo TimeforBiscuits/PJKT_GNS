@@ -56,3 +56,4 @@ Libre Caslon Text — OFL-1.1 — https://openfontlicense.org (via @fontsource/l
 EB Garamond — OFL-1.1 — https://openfontlicense.org (via @fontsource/eb-garamond v33)
 Fraunces — OFL-1.1 — https://openfontlicense.org (via @fontsource/fraunces v38)
 DM Serif Display — OFL-1.1 — https://openfontlicense.org (via @fontsource/dm-serif-display v17)
+Courier Prime — OFL-1.1 — https://openfontlicense.org (via @fontsource/courier-prime v11)

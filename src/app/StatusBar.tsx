@@ -13,6 +13,7 @@ const HINTS: Record<ToolId, [string, string]> = {
   polygon: ['Polygon', 'drag to draw · set the number of sides in the panel'],
   line: ['Line', 'drag to draw · Shift = 45° steps'],
   text: ['Text', 'tap the cover to place type'],
+  censor: ['Top secret', 'drag to draw a stripe · its thickness sets the type size · tap for a standard one'],
 }
 
 /** Messages stay up for a few seconds. */

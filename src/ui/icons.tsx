@@ -122,3 +122,13 @@ export const IconPaste = () => (
     <path d="M9 12 H15 M9 16 H15" strokeWidth={1.5} />
   </Svg>
 )
+
+/** TOP SECRET: a face, eyes shut, with a finger held to its lips. */
+export const IconShush = () => (
+  <Svg>
+    <path d="M9.6 18.6 A8.5 8.5 0 1 1 14.4 18.6" strokeWidth={1.8} strokeLinecap="butt" />
+    <path d="M7.4 8.6 h2.6 M14 8.6 h2.6" strokeWidth={1.8} />
+    <path d="M7.4 14.4 Q8.6 15.3 9.4 15.5 M14.6 15.5 Q15.4 15.3 16.6 14.4" strokeWidth={1.8} strokeLinecap="butt" />
+    <path d="M10.3 24 V11.8 a1.7 1.7 0 0 1 3.4 0 V24" strokeWidth={1.6} strokeLinejoin="round" />
+  </Svg>
+)

@@ -2,7 +2,7 @@ import { composeSheets, type Sheet } from '../model/compose'
 import type { ImageLayer } from '../model/doc'
 import { PRINTERS } from '../model/imposition'
 import { MM_PER_INCH } from '../model/units'
-import { fileSync, fontEntry, fontSync, loadFont, loadTextFonts } from '../fonts/registry'
+import { fileSync, fontEntry, fontSync, loadCensorFont, loadFont, loadTextFonts } from '../fonts/registry'
 import { useAssets, type Asset } from '../store/assets'
 import { useDoc } from '../store/doc'
 import { useEditor } from '../store/editor'
@@ -93,7 +93,11 @@ export async function rasterize(layer: ImageLayer, asset: Asset, dpi: number): P
 async function browserDeps(sheets: Sheet[], dpi: number, onImage?: () => void): Promise<WriterDeps> {
   const loads: Promise<unknown>[] = [loadFont('IBM Plex Mono', 400), loadFont('Inter Tight', 800)]
   for (const s of sheets)
-    for (const c of s.covers) for (const l of c?.layers ?? []) if (l.kind === 'text' && !l.hidden) loads.push(loadTextFonts(l))
+    for (const c of s.covers)
+      for (const l of c?.layers ?? []) {
+        if (l.kind === 'text' && !l.hidden) loads.push(loadTextFonts(l))
+        if (l.kind === 'censor' && !l.hidden) loads.push(loadCensorFont(l.weight))
+      }
   await Promise.all(loads)
   const assets = useAssets.getState().assets
   return {

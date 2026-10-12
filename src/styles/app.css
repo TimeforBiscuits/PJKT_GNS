@@ -1051,6 +1051,28 @@ input[type='range'].slider::-moz-range-thumb {
   background: var(--signal);
 }
 
+/* TOP SECRET words: typed straight into an LCD */
+.censor-words {
+  display: flex;
+  padding: 0;
+}
+
+.censor-words input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-shadow: inherit;
+  caret-color: var(--lcd);
+  outline: none;
+}
+
 /* a slider with its reading beside it */
 .slider-row {
   display: grid;

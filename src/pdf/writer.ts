@@ -29,7 +29,8 @@ import {
   type PDFPage,
 } from 'pdf-lib'
 import type { Sheet } from '../model/compose'
-import type { Cover, ImageLayer, Layer, ShapeLayer, TextLayer } from '../model/doc'
+import { CENSOR_FAMILY, censorFace, censorFontWeight, layoutCensor } from '../model/censor'
+import type { CensorLayer, Cover, ImageLayer, Layer, ShapeLayer, TextLayer } from '../model/doc'
 import { bleedFrame } from '../model/doc'
 import { frameMatrix, mul, rotate, translate, type Box, type Mat } from '../model/geometry'
 import { CUT_DASH, CUT_GAP, CUT_WIDTH, type CutLine, type Placement } from '../model/imposition'
@@ -156,6 +157,7 @@ class PageWriter {
     if (l.opacity < 1) ops.push(setGraphicsState(this.opacity(Math.round(l.opacity * 1000) / 1000)))
     if (l.kind === 'shape') ops.push(...this.shape(l))
     if (l.kind === 'text') ops.push(...this.text(l))
+    if (l.kind === 'censor') ops.push(...this.censor(l))
     if (l.kind === 'image') ops.push(...(await this.image(l)))
     ops.push(popGraphicsState())
     return ops
@@ -201,6 +203,27 @@ class PageWriter {
         stroke(),
       )
     }
+    return ops
+  }
+
+  /** TOP SECRET: the stripe, then its type clipped to it. */
+  censor(c: CensorLayer): PDFOperator[] {
+    const bar = rectPath(0, 0, c.w, c.h)
+    const ops = [setFillingRgbColor(...hexRgb(c.fill)), ...pathOps(bar), fill()]
+    const face = censorFace(this.deps.font(CENSOR_FAMILY, censorFontWeight(c.weight)), c.weight)
+    const { path, stroke: thick } = layoutCensor(face, c)
+    if (!path.length) return ops
+    ops.push(pushGraphicsState(), ...pathOps(bar), clip(), endPath())
+    ops.push(setFillingRgbColor(...hexRgb(c.color)), ...pathOps(path), fill())
+    if (thick)
+      ops.push(
+        setStrokingRgbColor(...hexRgb(c.color)),
+        setLineWidth(thick.width),
+        setLineJoin(LineJoinStyle.Round),
+        ...pathOps(thick.path),
+        stroke(),
+      )
+    ops.push(popGraphicsState())
     return ops
   }
 

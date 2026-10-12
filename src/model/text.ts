@@ -13,6 +13,8 @@ export interface ShapingFont {
   unitsPerEm: number
   ascent: number
   descent: number
+  /** Height of the capitals, in font units (not every font says). */
+  capHeight?: number
   layout(text: string): {
     glyphs: { path: { commands: { command: string; args: number[] }[] } }[]
     positions: { xAdvance: number; xOffset: number; yOffset: number }[]
@@ -31,7 +33,10 @@ export interface Face {
 export type FaceFor = (bold: boolean, italic: boolean) => Face
 
 export type TextSpec = Pick<TextLayer, 'text' | 'sizePt' | 'leadingPt' | 'tracking' | 'align' | 'uppercase' | 'w'> &
-  Partial<Pick<TextLayer, 'spans'>>
+  Partial<Pick<TextLayer, 'spans'>> & {
+    /** false: each paragraph stays on one line, however long. */
+    wrap?: boolean
+  }
 
 export interface TextLayout {
   /** Filled outlines in the text frame's own mm, origin at its top-left. */
@@ -94,7 +99,7 @@ export function layoutText(fonts: FaceFor | ShapingFont, spec: TextSpec): TextLa
       const ws = p0 + m.index
       const we = ws + m[0].length
       if (start < 0) [start, end] = [ws, we]
-      else if (measure(start, we) <= spec.w) end = we
+      else if (spec.wrap === false || measure(start, we) <= spec.w) end = we
       else {
         lines.push([start, end])
         ;[start, end] = [ws, we]

@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from 'react'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
-import type { TextLayer } from '../model/doc'
-import type { FaceFor, ShapingFont } from '../model/text'
+import { CENSOR_FAMILY, censorFace, censorFontWeight } from '../model/censor'
+import type { CensorWeight, TextLayer } from '../model/doc'
+import type { Face, FaceFor, ShapingFont } from '../model/text'
 import { CATALOG, facesFor, fileKey, filesFor, fontEntry, nearestWeight, type FontEntry, type FontFile } from './variants'
 
 export { CATALOG, DEFAULT_FAMILY, fontEntry, nearestWeight, type FontCategory, type FontEntry } from './variants'
@@ -68,6 +69,22 @@ export function useFaces(t: Pick<TextLayer, 'family' | 'weight' | 'text' | 'span
   // Stable while the same fonts serve the same styles.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => (missing ? null : facesFor(t, fileSync)), [sig, missing, ...fonts])
+}
+
+const censorFile = (w: CensorWeight): FontFile => ({ entry: fontEntry(CENSOR_FAMILY), weight: censorFontWeight(w), italic: false })
+
+/** Load the typewriter face a TOP SECRET stripe uses. */
+export const loadCensorFont = (w: CensorWeight) => loadFile(censorFile(w))
+
+/** The face for a TOP SECRET stripe once loaded; starts loading it if not. */
+export function useCensorFace(w: CensorWeight): Face | null {
+  const f = censorFile(w)
+  const k = fileKey(f)
+  const font = useLoaded((s) => s.fonts[k] ?? null)
+  useEffect(() => {
+    if (!font) loadFile(censorFile(w)).catch(() => undefined)
+  }, [k, font, w])
+  return useMemo(() => (font ? censorFace(font, w) : null), [font, w])
 }
 
 const cssLoaded = new Set<string>()

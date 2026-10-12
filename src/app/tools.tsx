@@ -9,6 +9,7 @@ import {
   IconPolygon,
   IconRect,
   IconSelect,
+  IconShush,
   IconText,
 } from '../ui/icons'
 
@@ -32,7 +33,10 @@ export const TOOL_GROUPS: ToolDef[][] = [
     { id: 'polygon', label: 'Poly', key: 'P', icon: <IconPolygon /> },
     { id: 'line', label: 'Line', key: 'L', icon: <IconLine /> },
   ],
-  [{ id: 'text', label: 'Text', key: 'T', icon: <IconText /> }],
+  [
+    { id: 'text', label: 'Text', key: 'T', icon: <IconText /> },
+    { id: 'censor', label: 'Secret', key: 'S', icon: <IconShush /> },
+  ],
 ]
 
 export const TOOLS: ToolDef[] = TOOL_GROUPS.flat()

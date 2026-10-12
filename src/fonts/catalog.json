@@ -808,6 +808,20 @@
     ]
   },
   {
+    "id": "courier-prime",
+    "family": "Courier Prime",
+    "category": "mono",
+    "style": "mono",
+    "weights": [
+      400,
+      700
+    ],
+    "italics": [
+      400,
+      700
+    ]
+  },
+  {
     "id": "bodoni-moda",
     "family": "Bodoni Moda",
     "category": "serif",

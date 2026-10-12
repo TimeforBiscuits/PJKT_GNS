@@ -48,6 +48,7 @@
   { "id": "ibm-plex-mono", "family": "IBM Plex Mono", "category": "mono", "style": "mono" },
   { "id": "space-mono", "family": "Space Mono", "category": "mono", "style": "mono" },
   { "id": "jetbrains-mono", "family": "JetBrains Mono", "category": "mono", "style": "mono" },
+  { "id": "courier-prime", "family": "Courier Prime", "category": "mono", "style": "mono" },
   { "id": "bodoni-moda", "family": "Bodoni Moda", "category": "serif", "style": "serif" },
   { "id": "playfair-display", "family": "Playfair Display", "category": "serif", "style": "serif" },
   { "id": "instrument-serif", "family": "Instrument Serif", "category": "serif", "style": "serif" },
