@@ -1,4 +1,4 @@
-import { composeSheets, type Sheet } from '../model/compose'
+import { blankSheets, composeSheets, type Sheet } from '../model/compose'
 import type { ImageLayer } from '../model/doc'
 import { PRINTERS } from '../model/imposition'
 import { MM_PER_INCH } from '../model/units'
@@ -164,6 +164,19 @@ export async function buildCoversPdf(fileName: string, onProgress?: (msg: string
   })
   const file = new File([bytes as BlobPart], fileName, { type: 'application/pdf' })
   return { file, sheets: sheets.reduce((n, s) => n + s.spec.copies, 0) }
+}
+
+/** Cut lines only: one blank Notebook page and one blank Square page, for this printer. */
+export async function buildBlankPdf(fileName: string): Promise<BuiltPdf> {
+  const sheets = blankSheets(PRINTERS[useEditor.getState().printerId])
+  const nothing: WriterDeps = {
+    font: () => {
+      throw new Error('A blank template has no type.')
+    },
+    image: async () => null,
+  }
+  const bytes = await writeSheetsPdf(sheets, nothing, { cutLines: true, title: 'PJKT_GNS cut template' })
+  return { file: new File([bytes as BlobPart], fileName, { type: 'application/pdf' }), sheets: sheets.length }
 }
 
 export async function buildTestPdf(): Promise<BuiltPdf> {

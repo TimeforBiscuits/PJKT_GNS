@@ -71,6 +71,8 @@ white edge.
   keeps its 2 mm bleed; trim that off after mounting it on card.
 - Print the *Printer test page* once: the square must measure 100.0 mm, and
   the edge gauges show where your printer stops printing.
+- *Blank cut template* prints the cut lines alone (a Notebook page, then a
+  Square page) for the chosen printer, with nothing else on the paper.
 
 ## Roadmap
 

@@ -6,7 +6,7 @@ import * as fontkit from 'fontkit'
 import { PDFDocument, PDFName } from 'pdf-lib'
 import { describe, expect, it } from 'vitest'
 import catalog from '../fonts/catalog.json'
-import { composeSheets } from '../model/compose'
+import { blankSheets, composeSheets } from '../model/compose'
 import { newSheet } from '../model/sheets'
 import { CENSOR_DEFAULTS } from '../model/censor'
 import { newCover, uid, type CensorLayer, type Cover, type ShapeLayer, type TextLayer } from '../model/doc'
@@ -258,6 +258,24 @@ describe('PDF output', () => {
     expect(dark(27.5, 60)).toBe(false)
     expect(dark(72.5, 60)).toBe(false)
     expect(dark(50, 48.5)).toBe(false)
+  })
+
+  it.skipIf(!hasPoppler)('writes a blank template: cut lines for every slot and nothing else', async () => {
+    const sheets = blankSheets(PRINTERS.pixma)
+    const bytes = await writeSheetsPdf(sheets, deps, { cutLines: true, title: 'PJKT_GNS cut template' })
+    const doc = await PDFDocument.load(bytes)
+    expect(doc.getPageCount()).toBe(2) // Notebook, then Square
+    expect(doc.getTitle()).toBe('PJKT_GNS cut template')
+    const img = render(bytes)
+    const [top, bottom] = sheets[0].layout.placements
+    // dashes in the left margin beside both slots' outer edges
+    let dashes = 0
+    for (let y = 0; y < 100; y++) if (img.at(Math.round(top.bleed.x * 10) - 1, y) < 128) dashes++
+    expect(dashes).toBeGreaterThan(10)
+    // the slots themselves are blank paper
+    for (const p of [top, bottom])
+      for (let y = Math.round((p.bleed.y + 1) * 10); y < (p.bleed.y + p.bleed.h - 1) * 10; y += 7)
+        for (let x = Math.round((p.bleed.x + 1) * 10); x < (p.bleed.x + p.bleed.w - 1) * 10; x += 7) expect(img.at(x, y)).toBeGreaterThan(240)
   })
 
   it.skipIf(!hasPoppler)('draws the test page’s 100 mm square at true size', async () => {

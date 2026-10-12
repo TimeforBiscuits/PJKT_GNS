@@ -65,6 +65,8 @@ export interface WriterDeps {
 export interface WriteOptions {
   /** Dashed cut lines around each picture, on the white paper only. */
   cutLines: boolean
+  /** The PDF's title (default: PJKT_GNS covers). */
+  title?: string
 }
 
 const K = mmToPt(1)
@@ -345,7 +347,7 @@ function newDoc(pdf: PDFDocument, title: string) {
 
 export async function writeSheetsPdf(sheets: Sheet[], deps: WriterDeps, opts: WriteOptions): Promise<Uint8Array> {
   const pdf = await PDFDocument.create()
-  newDoc(pdf, 'PJKT_GNS covers')
+  newDoc(pdf, opts.title ?? 'PJKT_GNS covers')
   const images = new Map<string, Promise<PDFImage | null>>()
   for (const sheet of sheets) {
     for (let copy = 0; copy < sheet.spec.copies; copy++) {

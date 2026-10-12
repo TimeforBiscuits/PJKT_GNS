@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { buildCoversPdf, buildTestPdf } from '../../pdf/export'
+import { buildBlankPdf, buildCoversPdf, buildTestPdf } from '../../pdf/export'
 import { useDoc } from '../../store/doc'
 import { baseName, canPickSaveLocation, deliver, pickSaveLocation, writeTo, type Writable } from '../files'
 import { Key } from '../../ui/controls'
@@ -19,10 +19,15 @@ export function ExportControls() {
   const [state, setState] = useState<State>({ phase: 'idle' })
   const busy = state.phase === 'busy'
 
-  const run = async (kind: 'covers' | 'test') => {
+  const run = async (kind: 'covers' | 'test' | 'blank') => {
     // Chrome and Edge ask where to save first, while the click still counts as
     // a user gesture; other browsers hand over the finished file afterwards.
-    const fileName = kind === 'covers' ? `${baseName(useDoc.getState().project.name, 'covers')}.pdf` : 'PJKT_GNS-printer-test.pdf'
+    const fileName =
+      kind === 'covers'
+        ? `${baseName(useDoc.getState().project.name, 'covers')}.pdf`
+        : kind === 'blank'
+          ? 'PJKT_GNS-cut-template.pdf'
+          : 'PJKT_GNS-printer-test.pdf'
     let handle: Writable | null = null
     if (canPickSaveLocation()) {
       try {
@@ -35,7 +40,12 @@ export function ExportControls() {
     }
     setState({ phase: 'busy', msg: 'Starting' })
     try {
-      const built = kind === 'covers' ? await buildCoversPdf(fileName, (msg) => setState({ phase: 'busy', msg })) : await buildTestPdf()
+      const built =
+        kind === 'covers'
+          ? await buildCoversPdf(fileName, (msg) => setState({ phase: 'busy', msg }))
+          : kind === 'blank'
+            ? await buildBlankPdf(fileName)
+            : await buildTestPdf()
       if (handle) {
         await writeTo(handle, built.file)
         setState({ phase: 'done', msg: `Saved · ${built.sheets} sheet${built.sheets === 1 ? '' : 's'} · ${mb(built.file.size)}` })
@@ -64,9 +74,14 @@ export function ExportControls() {
           {navigator.maxTouchPoints > 1 ? 'Save to Files…' : 'Download PDF'}
         </Key>
       )}
-      <Key size="sm" disabled={busy} onClick={() => void run('test')} title="One page with a 100 mm square, rulers and edge gauges">
-        Printer test page
-      </Key>
+      <div className="grid-2">
+        <Key size="sm" disabled={busy} onClick={() => void run('test')} title="One page with a 100 mm square, rulers and edge gauges">
+          Printer test page
+        </Key>
+        <Key size="sm" disabled={busy} onClick={() => void run('blank')} title="Just the dashed cut lines: a Notebook page and a Square page, nothing printed">
+          Blank cut template
+        </Key>
+      </div>
     </div>
   )
 }
