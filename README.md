@@ -51,6 +51,8 @@ white edge.
   fill the bar less a 2 pt gap. Words show as typed (*All caps* is a
   switch). Draw it thicker and the type grows; words
   past the ends are cut off, and *Fit length* sizes the bar to them.
+  Set *Type size* and the whole stripe scales with it (thickness, gap and
+  length), keeping its proportions and its aligned end in place.
 - *Effects* (any layer): opacity, *Ben-Day dots* and *Distressed*.
   - Ben-Day turns flat colour into Lichtenstein dots of that colour
     (outlines stay solid) and pictures into a four-colour comic print.
@@ -141,6 +143,7 @@ white edge.
   - [x] Knockout letters for text and TOP SECRET stripes
   - [x] Card stock: see the coloured card on screen, never print it
   - [x] Picture size slider: 0 in the middle is the size it came in at
+  - [x] TOP SECRET type size you can set, scaling the whole stripe
 
 ## Development
 

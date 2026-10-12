@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import * as fontkit from 'fontkit'
 import { describe, expect, it } from 'vitest'
-import { censorFace, fitWidth, layoutCensor } from './censor'
+import { censorFace, fitWidth, layoutCensor, scaleCensor } from './censor'
 import type { Path } from './path'
 import type { ShapingFont } from './text'
 import { ptToMm } from './units'
@@ -46,5 +46,26 @@ describe('TOP SECRET stripes', () => {
     const fx = xs(fitted.path)
     expect(Math.min(...fx)).toBeGreaterThan(0)
     expect(Math.max(...fx)).toBeLessThan(w)
+  })
+
+  it('scales the whole stripe with its type size, keeping its proportions', () => {
+    const face = censorFace(regular, 'medium')
+    const stripe = { ...spec, x: 20, y: 40, rotation: 0, text: 'TOP SECRET', align: 'left' as const }
+    const before = layoutCensor(face, stripe)
+    const big = { ...stripe, ...scaleCensor(stripe, before, before.sizePt * 2) }
+    const after = layoutCensor(face, big)
+    expect(after.sizePt).toBeCloseTo(before.sizePt * 2, 6)
+    expect(big.h).toBeCloseTo(20, 6)
+    expect(big.w).toBeCloseTo(160, 6)
+    expect(big.insetPt).toBeCloseTo(4, 6)
+    // the words fill the same share of the stripe as before
+    expect(fitWidth(after) / big.w).toBeCloseTo(fitWidth(before) / stripe.w, 6)
+    // left-aligned: the left end and the centre line stay put
+    expect(big.x).toBeCloseTo(20, 6)
+    expect(big.y + big.h / 2).toBeCloseTo(45, 6)
+    // centred: the middle stays put
+    const mid = scaleCensor({ ...stripe, align: 'center' }, before, before.sizePt / 2)
+    expect(mid.x + mid.w / 2).toBeCloseTo(60, 6)
+    expect(mid.y + mid.h / 2).toBeCloseTo(45, 6)
   })
 })

@@ -1,6 +1,6 @@
-import type { CensorLayer, CensorWeight } from './doc'
+import type { CensorLayer, CensorWeight, Frame } from './doc'
 import { transformPath } from './path'
-import { translate } from './geometry'
+import { reframe, translate } from './geometry'
 import { layoutText, type Face, type ShapingFont, type TextLayout } from './text'
 import { mmToPt, ptToMm } from './units'
 
@@ -78,3 +78,17 @@ export function layoutCensor(face: Face, l: CensorSpec): CensorLayout {
 
 /** Stripe length that just holds the line of type. */
 export const fitWidth = (layout: CensorLayout) => layout.textWidth + 2 * layout.pad
+
+/**
+ * Set the type to `sizePt` by scaling the whole stripe with it — thickness,
+ * gap and length — so it keeps its proportions. The aligned end (or the
+ * middle) and the stripe's centre line stay put.
+ */
+export function scaleCensor(l: Frame & Pick<CensorLayer, 'align' | 'insetPt'>, layout: CensorLayout, sizePt: number): Frame & Pick<CensorLayer, 'insetPt'> {
+  const k = sizePt / layout.sizePt
+  const w = l.w * k
+  const h = l.h * k
+  const left = l.align === 'left' ? 0 : l.align === 'right' ? l.w - w : (l.w - w) / 2
+  const top = (l.h - h) / 2
+  return { ...reframe(l, left, top, left + w, top + h), insetPt: l.insetPt * k }
+}

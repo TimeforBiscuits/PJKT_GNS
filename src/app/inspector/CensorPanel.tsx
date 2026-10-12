@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCensorFace } from '../../fonts/registry'
-import { fitWidth, layoutCensor } from '../../model/censor'
+import { fitWidth, layoutCensor, scaleCensor } from '../../model/censor'
 import type { CensorLayer, CensorWeight, TextAlign } from '../../model/doc'
 import { reframe } from '../../model/geometry'
 import { mmToPt } from '../../model/units'
@@ -85,13 +85,25 @@ export function CensorPanel({ layer }: { layer: CensorLayer }) {
           decimals={1}
           onChange={(insetPt) => set({ insetPt })}
         />
-        <div className="field">
-          <span className="field-label">Type size</span>
-          <span className="lcd" aria-label="Type size">
-            {layout ? layout.sizePt.toFixed(1) : '—'}
-            <span className="unit">pt</span>
-          </span>
-        </div>
+        {layout ? (
+          <LcdField
+            label="Type size"
+            unit="pt"
+            value={Math.round(layout.sizePt * 10) / 10}
+            step={1}
+            min={2}
+            max={400}
+            decimals={1}
+            onChange={(sizePt) => set(scaleCensor(layer, layout, sizePt))}
+          />
+        ) : (
+          <div className="field">
+            <span className="field-label">Type size</span>
+            <span className="lcd" aria-label="Type size">
+              —<span className="unit">pt</span>
+            </span>
+          </div>
+        )}
         <LcdField label="Tracking" unit="/1000" value={layer.tracking} step={10} min={-200} max={1000} onChange={(tracking) => set({ tracking })} />
         <div className="field">
           <span className="field-label">Align</span>
@@ -119,7 +131,7 @@ export function CensorPanel({ layer }: { layer: CensorLayer }) {
         </Key>
       </div>
       <p className="note">
-        Draw it thicker and the type grows with it. {overflow ? <b>The words run past the ends and are cut off — Fit length shows them all.</b> : 'Words that run past the ends are cut off.'}
+        Draw it thicker and the type grows with it; set Type size and the whole stripe scales with it. {overflow ? <b>The words run past the ends and are cut off — Fit length shows them all.</b> : 'Words that run past the ends are cut off.'}
       </p>
 
       <ColorRow label="Stripe" allowNone={false} value={layer.fill} onChange={(c) => set({ fill: c ?? '#0d0d0c' })} />
