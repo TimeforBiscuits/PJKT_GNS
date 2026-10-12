@@ -43,15 +43,18 @@ white edge.
   cover it lands in the same spot.
 - *Secret* (S) draws a TOP SECRET stripe: a #0d0d0c bar whose words are
   set in Courier Prime (Regular, Medium or Bold), sized so the capitals
-  fill the bar less a 2 pt gap. Draw it thicker and the type grows; words
+  fill the bar less a 2 pt gap. Words show as typed (*All caps* is a
+  switch). Draw it thicker and the type grows; words
   past the ends are cut off, and *Fit length* sizes the bar to them.
 - *Effects* (any layer): opacity, *Ben-Day dots* and *Distressed*.
   - Ben-Day turns flat colour into Lichtenstein dots of that colour
     (outlines stay solid) and pictures into a four-colour comic print.
     *Strength* and *Dot size* set the look.
-  - Distressed wears the layer through to what's beneath: speckle,
-    patches, eaten edges and scuffs. *Wear* sets how much; *Shuffle*
-    picks another pattern.
+  - Distressed batters the layer like an old cabinet: chips knocked out
+    of edges and corners, slivers shaved off straight runs, dings, flakes,
+    scuffs, hairline scratches, dragged scrapes and gouges, worn through
+    to what's beneath. Small things (type) also get a stamped speckle.
+    *Wear* sets how much; *Shuffle* picks another pattern.
   - Both can be on at once. Layers with effects print as pictures at the
     PDF's resolution; everything else stays vector.
 

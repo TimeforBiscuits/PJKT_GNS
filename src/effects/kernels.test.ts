@@ -83,6 +83,60 @@ describe('distressed', () => {
     expect(run(42)).not.toEqual(run(43))
   })
 
+  it('chips and scratches a big shape the same at any resolution', () => {
+    // the damage is planned from one fixed-resolution reading of the shape
+    const shapeAt = (k: number) => solid(Math.round(80 * k), Math.round(60 * k), [0, 0, 0])
+    const shape = { mask: shapeAt(6), grid: { x0: 0, y0: 0, k: 6 } }
+    const cells = (k: number) => {
+      const p = shapeAt(k)
+      distress(p, { x0: 0, y0: 0, k }, 80, 11, shape)
+      // mean alpha in 2 mm cells
+      const out: number[] = []
+      for (let cy = 0; cy < 30; cy++)
+        for (let cx = 0; cx < 40; cx++) {
+          let sum = 0
+          let n = 0
+          for (let j = Math.floor(cy * 2 * k); j < (cy + 1) * 2 * k; j++)
+            for (let i = Math.floor(cx * 2 * k); i < (cx + 1) * 2 * k; i++) {
+              sum += p.data[(j * p.width + i) * 4 + 3]
+              n++
+            }
+          out.push(sum / n / 255)
+        }
+      return out
+    }
+    const lo = cells(6)
+    const hi = cells(15)
+    let diff = 0
+    let damaged = 0
+    for (let i = 0; i < lo.length; i++) {
+      diff += Math.abs(lo[i] - hi[i])
+      if (lo[i] < 0.9) damaged++
+    }
+    expect(damaged).toBeGreaterThan(10) // it is actually damaged
+    expect(diff / lo.length).toBeLessThan(0.02) // in the same places
+  })
+
+  it('knocks more out of a big shape’s edges than its middle', () => {
+    const p = solid(800, 600, [0, 0, 0]) // 80 × 60 mm
+    distress(p, { x0: 0, y0: 0, k: K }, 85, 5)
+    const band = (inner: boolean) => {
+      let sum = 0
+      let n = 0
+      for (let j = 0; j < 600; j++)
+        for (let i = 0; i < 800; i++) {
+          const edge = i < 15 || j < 15 || i >= 785 || j >= 585
+          if (edge === inner) continue
+          sum += p.data[(j * 800 + i) * 4 + 3]
+          n++
+        }
+      return sum / n / 255
+    }
+    expect(band(false)).toBeLessThan(band(true) - 0.03)
+    // and no spray-paint speckle across the middle
+    expect(band(true)).toBeGreaterThan(0.93)
+  })
+
   it('leaves untouched pixels that were already clear', () => {
     const p = solid(100, 100, [0, 0, 0])
     for (let i = 3; i < p.data.length; i += 8) p.data[i] = 0

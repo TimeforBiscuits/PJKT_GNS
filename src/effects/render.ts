@@ -4,7 +4,7 @@ import type { Box } from '../model/geometry'
 import { isClosed, rectPath, shapePath, toSvgD } from '../model/path'
 import { layoutText, type Face, type FaceFor } from '../model/text'
 import { ptToMm } from '../model/units'
-import { bendayFlat, distress, halftone, type Grid, type Pixels } from './kernels'
+import { bendayFlat, distress, halftone, type Grid, type Pixels, type Shape } from './kernels'
 
 // Draws one layer onto a canvas in its own millimetres, applies its print
 // effects, and hands back the pixels with the box they cover. The screen
@@ -165,6 +165,26 @@ function sampler(src: HTMLCanvasElement, box: Box, cellMm: number) {
 }
 
 /**
+ * The plain layer at a fixed resolution that depends only on its size, for
+ * the damage to be planned from: the preview and the print read the same.
+ */
+function shapeOf(l: Layer, env: FxEnv, b: Box): Shape {
+  const k = Math.min(6, Math.sqrt(1_500_000 / (b.w * b.h)))
+  const W = Math.max(1, Math.round(b.w * k))
+  const H = Math.max(1, Math.round(b.h * k))
+  const canvas = document.createElement('canvas')
+  canvas.width = W
+  canvas.height = H
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+  ctx.setTransform(W / b.w, 0, 0, H / b.h, (-b.x * W) / b.w, (-b.y * H) / b.h)
+  draw(ctx, l, env, 'fill')
+  draw(ctx, l, env, 'line')
+  const mask = pixels(ctx, W, H)
+  canvas.width = canvas.height = 0
+  return { mask, grid: { x0: b.x, y0: b.y, k: (W / b.w + H / b.h) / 2 } }
+}
+
+/**
  * Render a layer with its effects at k pixels per mm (lowered if the canvas
  * would pass maxPixels). Returns null if there's nothing to draw yet.
  */
@@ -207,7 +227,7 @@ export function renderFx(l: Layer, env: FxEnv, k: number, maxPixels = 16_000_000
   let opaque = false
   if (fx?.distress && fx.distress.strength > 0) {
     const px = pixels(ctx, W, H)
-    distress(px, grid, fx.distress.strength, fx.distress.seed)
+    distress(px, grid, fx.distress.strength, fx.distress.seed, shapeOf(l, env, b))
     ctx.putImageData(px.img, 0, 0)
   } else if (l.kind === 'image') {
     const d = ctx.getImageData(0, 0, W, H).data

@@ -40,7 +40,7 @@ export function CensorPanel({ layer }: { layer: CensorLayer }) {
           <input
             value={text}
             spellCheck={false}
-            autoCapitalize="characters"
+            autoCapitalize="off"
             autoCorrect="off"
             enterKeyHint="done"
             aria-label="Stripe words"

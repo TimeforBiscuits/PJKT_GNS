@@ -16,7 +16,8 @@ export const CENSOR_DEFAULTS: Pick<CensorLayer, 'text' | 'weight' | 'insetPt' | 
   insetPt: 2,
   tracking: 0,
   align: 'center',
-  uppercase: true,
+  // Words show as typed; All caps is there when wanted.
+  uppercase: false,
   fill: '#0d0d0c',
   color: '#edeef0',
 }
