@@ -37,6 +37,11 @@ white edge.
   session, and it stays still if the system asks for reduced motion.
 - For true 1:1 on screen, press *Cal* once per device and match a bank
   card.
+- *Picture size* (Image panel) starts in the middle at 0, the size the
+  picture came in at: slide left to shrink it (down to a quarter), right to
+  enlarge it (up to four times), or type any size from −90 % to +700 %. It
+  snaps back to 0 near the middle. Shrinking it below its frame turns off
+  *Keep frame filled*, since a smaller picture leaves gaps.
 - *Undo · Redo · Copy · Paste* sit at the top of the right-hand panel. On
   a keyboard they are ⌘Z, ⌘⇧Z, ⌘C, ⌘V on Mac and iPad (Ctrl on Windows).
   A pasted layer keeps its size, type and formatting; pasted onto another
@@ -135,6 +140,7 @@ white edge.
 - [x] **Requests, round 4:**
   - [x] Knockout letters for text and TOP SECRET stripes
   - [x] Card stock: see the coloured card on screen, never print it
+  - [x] Picture size slider: 0 in the middle is the size it came in at
 
 ## Development
 

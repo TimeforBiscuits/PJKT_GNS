@@ -1,7 +1,7 @@
 import { ppiColor } from '../../editor/draw'
 import { layerPpi, placeContent } from '../../editor/importImage'
 import { bleedFrame, type ImageLayer } from '../../model/doc'
-import { clampToFill, isFullBleed, pictureScale, pictureShift, scalePicture, shiftPicture } from '../../model/picture'
+import { clampToFill, isFullBleed, pictureShift, pictureSize, resizePicture, shiftPicture, sizeToSlider, sliderToSize } from '../../model/picture'
 import { useAssets } from '../../store/assets'
 import { activeCover, useActiveCover, useDoc } from '../../store/doc'
 import { Key, LcdField, Panel, Toggle } from '../../ui/controls'
@@ -15,12 +15,11 @@ export function ImagePanel({ layer }: { layer: ImageLayer }) {
   const cover = useActiveCover()
   const set = (patch: Partial<ImageLayer>) => update<ImageLayer>(layer.id, patch)
   const ppi = asset ? layerPpi(layer, asset) : 0
-  const scale = asset ? pictureScale(layer, asset.width, asset.height) * 100 : 100
+  const size = asset ? pictureSize(layer, asset.width, asset.height, cover) : 1
   const shift = pictureShift(layer)
-  const minScale = layer.fillLock ? 100 : 10
   const fullBleedFrame = isFullBleed(layer, cover)
 
-  const setScale = (pct: number) => asset && set({ content: scalePicture(layer, asset.width, asset.height, pct / 100) })
+  const setSize = (s: number) => asset && set(resizePicture(layer, asset.width, asset.height, cover, s))
 
   const place = (mode: 'fill' | 'fit') =>
     asset && set({ content: placeContent(asset.width, asset.height, layer.w, layer.h, mode), fillLock: mode === 'fill' ? layer.fillLock : false })
@@ -47,11 +46,21 @@ export function ImagePanel({ layer }: { layer: ImageLayer }) {
       </div>
 
       <div className="field">
-        <span className="field-label">Picture scale · 100 % fills the frame</span>
-        <GestureSlider label="Picture scale" value={scale} min={minScale} max={400} step={1} onChange={setScale} />
+        <span className="field-label">Picture size · 0 = as imported</span>
+        <GestureSlider label="Picture size" centred value={sizeToSlider(size)} min={-100} max={100} step={0.1} onChange={(t) => setSize(sliderToSize(t))} />
       </div>
       <div className="grid-2">
-        <LcdField label="Scale" unit="%" value={Math.round(scale * 10) / 10} step={5} min={minScale} max={800} decimals={1} onChange={setScale} />
+        <LcdField
+          label="Size"
+          unit="%"
+          signed
+          value={Math.round((size - 1) * 1000) / 10}
+          step={5}
+          min={-90}
+          max={700}
+          decimals={1}
+          onChange={(pct) => setSize(1 + pct / 100)}
+        />
         <div className="field">
           <span className="field-label">&nbsp;</span>
           <Key size="sm" onClick={() => set({ content: shiftPicture(layer, { x: 0, y: 0 }) })} title="Centre the picture in its frame">

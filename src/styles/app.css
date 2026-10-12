@@ -1051,6 +1051,19 @@ input[type='range'].slider::-moz-range-thumb {
   background: var(--signal);
 }
 
+/* a slider whose middle is zero: a mark shows where */
+input[type='range'].slider--centred::-webkit-slider-runnable-track {
+  background:
+    linear-gradient(var(--lcd), var(--lcd)) center / 2px 100% no-repeat,
+    var(--lcd-bg);
+}
+
+input[type='range'].slider--centred::-moz-range-track {
+  background:
+    linear-gradient(var(--lcd), var(--lcd)) center / 2px 100% no-repeat,
+    var(--lcd-bg);
+}
+
 /* TOP SECRET words: typed straight into an LCD */
 .censor-words {
   display: flex;

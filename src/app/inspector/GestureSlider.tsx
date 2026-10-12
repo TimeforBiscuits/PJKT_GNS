@@ -1,12 +1,12 @@
 import { useDoc } from '../../store/doc'
 
-/** Range slider whose drag counts as one undo step. */
-export function GestureSlider({ value, min, max, step, onChange, label }: { value: number; min: number; max: number; step: number; onChange: (v: number) => void; label: string }) {
+/** Range slider whose drag counts as one undo step. `centred` marks the middle of its track as zero. */
+export function GestureSlider({ value, min, max, step, onChange, label, centred = false }: { value: number; min: number; max: number; step: number; onChange: (v: number) => void; label: string; centred?: boolean }) {
   const begin = useDoc((s) => s.beginGesture)
   const end = useDoc((s) => s.endGesture)
   return (
     <input
-      className="slider"
+      className={centred ? 'slider slider--centred' : 'slider'}
       type="range"
       aria-label={label}
       min={min}
@@ -19,7 +19,8 @@ export function GestureSlider({ value, min, max, step, onChange, label }: { valu
         const done = new AbortController()
         const finish = () => {
           done.abort()
-          end()
+          // The slider's last change event comes after the release: let it land in this step too.
+          setTimeout(end, 0)
         }
         window.addEventListener('pointerup', finish, { signal: done.signal })
         window.addEventListener('pointercancel', finish, { signal: done.signal })

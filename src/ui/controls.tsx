@@ -95,6 +95,7 @@ export function LcdField({
   min = -Infinity,
   max = Infinity,
   decimals = 0,
+  signed = false,
 }: {
   label: string
   value: number
@@ -104,6 +105,8 @@ export function LcdField({
   min?: number
   max?: number
   decimals?: number
+  /** Show a + on values above zero. */
+  signed?: boolean
 }) {
   // A draft only lives while it was typed against the current value.
   const [edit, setEdit] = useState<{ text: string; base: number } | null>(null)
@@ -125,7 +128,7 @@ export function LcdField({
         <span className="lcd">
           <input
             inputMode="decimal"
-            value={draft ?? format(value, decimals)}
+            value={draft ?? (signed && value > 0 ? '+' : '') + format(value, decimals)}
             onChange={(e) => setDraft(e.target.value)}
             onBlur={(e) => commit(e.target.value)}
             onKeyDown={(e) => {

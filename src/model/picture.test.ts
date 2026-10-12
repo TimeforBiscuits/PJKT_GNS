@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { ImageLayer } from './doc'
-import { clampToFill, pictureScale, pictureShift, scalePicture, shiftPicture } from './picture'
+import { newCover, type ImageLayer } from './doc'
+import { clampToFill, pictureScale, pictureShift, pictureSize, resizePicture, scalePicture, shiftPicture, sizeToSlider, sliderToSize } from './picture'
 
 // A 4000 × 3000 photo full-bleed on a Notebook: frame 184 × 144 mm.
 const IW = 4000
@@ -61,5 +61,44 @@ describe('picture placement', () => {
     expect(pictureShift({ ...big, content: c })).toEqual({ x: 40, y: -10 })
     const far = shiftPicture(big, { x: 500, y: 0 })
     expect(far.x).toBe(0)
+  })
+})
+
+describe('picture size against the imported size', () => {
+  const cover = newCover('notebook', 1)
+
+  it('reads 1 as imported, whatever the frame is cropped to', () => {
+    expect(pictureSize(layer(), IW, IH, cover)).toBeCloseTo(1, 9)
+    // cropped to the front panel: same picture, same size
+    const cropped = layer({ x: 90, w: 92, content: { x: -94, y: 0, w: 192, h: 144 } })
+    expect(pictureSize(cropped, IW, IH, cover)).toBeCloseTo(1, 9)
+  })
+
+  it('enlarges and keeps the frame filled', () => {
+    const r = resizePicture(layer(), IW, IH, cover, 2)
+    expect(r.fillLock).toBe(true)
+    expect(r.content.w).toBeCloseTo(384, 9)
+  })
+
+  it('shrinks below the frame by letting go of Keep frame filled', () => {
+    const r = resizePicture(layer(), IW, IH, cover, 0.5)
+    expect(r.fillLock).toBe(false)
+    expect(r.content.w).toBeCloseTo(96, 9)
+    expect(r.content.x + r.content.w / 2).toBeCloseTo(92, 9) // still centred
+    // an unlocked picture stays unlocked when enlarged again
+    expect(resizePicture({ ...layer(), ...r }, IW, IH, cover, 1.5).fillLock).toBe(false)
+  })
+
+  it('maps the slider: as imported in the middle, a quarter to four times at the ends', () => {
+    expect(sizeToSlider(1)).toBeCloseTo(0, 9)
+    expect(sizeToSlider(0.25)).toBeCloseTo(-100, 9)
+    expect(sizeToSlider(4)).toBeCloseTo(100, 9)
+    // half and double sit the same distance either side
+    expect(sizeToSlider(0.5)).toBeCloseTo(-sizeToSlider(2), 9)
+    expect(sizeToSlider(10)).toBe(100)
+    for (const t of [-100, -37, 25, 100]) expect(sizeToSlider(sliderToSize(t))).toBeCloseTo(t, 9)
+    // near the middle it snaps to exactly as imported
+    expect(sliderToSize(1.5)).toBe(1)
+    expect(sliderToSize(-1.5)).toBe(1)
   })
 })

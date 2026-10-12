@@ -59,6 +59,34 @@ export function shiftPicture(l: ImageLayer, shift: Pt): Content {
   return l.fillLock ? clampToFill(next, l) : next
 }
 
+// Picture size, as the Image panel reads it: against the size the picture
+// came in at, which is filling the cover's whole printed area (every import,
+// and every change of format, places it so). 1 = as imported.
+
+/** Image pixels → mm factor a picture is imported at on this cover. */
+export const importFactor = (iw: number, ih: number, cover: Cover) => fillFactor(iw, ih, bleedFrame(cover))
+
+/** Current size, 1 = as imported. */
+export const pictureSize = (l: ImageLayer, iw: number, ih: number, cover: Cover) => l.content.w / (iw * importFactor(iw, ih, cover))
+
+/**
+ * Resize the picture to `size` × its imported size, about the frame centre.
+ * Smaller than the frame can only leave gaps, so that lets go of fillLock.
+ */
+export function resizePicture(l: ImageLayer, iw: number, ih: number, cover: Cover, size: number): Pick<ImageLayer, 'content' | 'fillLock'> {
+  const scale = (size * importFactor(iw, ih, cover)) / fillFactor(iw, ih, l)
+  const fillLock = l.fillLock && scale > 1 - 1e-9
+  return { fillLock, content: scalePicture({ ...l, fillLock }, iw, ih, scale) }
+}
+
+/** The size slider: as imported in the middle (0), a quarter at the left end (−100), four times at the right (100). */
+export const SIZE_SPAN = 4
+
+export const sizeToSlider = (size: number) => Math.max(-100, Math.min(100, (100 * Math.log(size)) / Math.log(SIZE_SPAN)))
+
+/** Close to the middle snaps to exactly as imported. */
+export const sliderToSize = (t: number) => (Math.abs(t) < 2 ? 1 : SIZE_SPAN ** (t / 100))
+
 /** Does the frame span the cover's whole printed area, bleed included? */
 export function isFullBleed(l: ImageLayer, cover: Cover) {
   const b = bleedFrame(cover)
