@@ -2,6 +2,8 @@ import { useDoc, useSelectedLayer } from '../../store/doc'
 import { useEditor } from '../../store/editor'
 import { CoversPanel } from './CoversPanel'
 import { DocumentPanel } from './DocumentPanel'
+import { EditStrip } from './EditStrip'
+import { EffectsPanel } from './EffectsPanel'
 import { ImagePanel } from './ImagePanel'
 import { LayersPanel } from './LayersPanel'
 import { PrintPanel, SheetsPanel } from './PrintPanel'
@@ -19,6 +21,7 @@ export function Inspector() {
   if (view === 'sheet')
     return (
       <aside className="inspector" aria-label="Inspector">
+        <EditStrip />
         <PrintPanel />
         <SheetsPanel />
       </aside>
@@ -27,6 +30,7 @@ export function Inspector() {
   const drawing = tool === 'rect' || tool === 'ellipse' || tool === 'polygon' || tool === 'line'
   return (
     <aside className="inspector" aria-label="Inspector">
+      <EditStrip />
       <CoversPanel />
       {layer ? (
         <>
@@ -34,6 +38,7 @@ export function Inspector() {
           {layer.kind === 'image' && <ImagePanel layer={layer} />}
           {layer.kind === 'shape' && <ShapePanel layer={layer} />}
           {layer.kind === 'text' && <TextPanel layer={layer} />}
+          <EffectsPanel layer={layer} />
         </>
       ) : (
         <>

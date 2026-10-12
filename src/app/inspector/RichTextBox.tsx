@@ -3,6 +3,7 @@ import { cssFamily, fontEntry } from '../../fonts/registry'
 import { variantFor } from '../../fonts/variants'
 import type { TextSpan } from '../../model/doc'
 import { runsOf, spansFromFlags } from '../../model/richtext'
+import { MOD } from '../platform'
 
 // The text box: type freely, select words and tap B or I (or ⌘B / ⌘I).
 // It's an editable element showing bold and italic as you set them; what it
@@ -195,10 +196,10 @@ export function StyleKeys({ editor, active }: { editor: React.RefObject<RichText
   const keep = (e: React.SyntheticEvent) => e.preventDefault()
   return (
     <div className="style-keys" role="group" aria-label="Word style">
-      <button type="button" className="key key--sm style-key" aria-pressed={active.bold} onPointerDown={keep} onMouseDown={keep} onClick={() => editor.current?.toggle('bold')} title="Bold (⌘B)">
+      <button type="button" className="key key--sm style-key" aria-pressed={active.bold} onPointerDown={keep} onMouseDown={keep} onClick={() => editor.current?.toggle('bold')} title={`Bold (${MOD}B)`}>
         <b>B</b>
       </button>
-      <button type="button" className="key key--sm style-key" aria-pressed={active.italic} onPointerDown={keep} onMouseDown={keep} onClick={() => editor.current?.toggle('italic')} title="Italic (⌘I)">
+      <button type="button" className="key key--sm style-key" aria-pressed={active.italic} onPointerDown={keep} onMouseDown={keep} onClick={() => editor.current?.toggle('italic')} title={`Italic (${MOD}I)`}>
         <i>I</i>
       </button>
       <span className="note">Select words, then B or I. Nothing selected = whole text.</span>

@@ -46,6 +46,8 @@ interface DocState {
   updateLayer: <L extends Layer>(id: string, patch: Partial<L>) => void
   removeLayer: (id: string) => void
   duplicateLayer: (id: string) => void
+  /** Add a copy of a layer (from the clipboard) to the open cover. */
+  pasteLayer: (layer: Layer) => void
   restack: (id: string, to: 'up' | 'down' | 'top' | 'bottom') => void
   /** Replace the whole project (restore or open a file); history starts fresh. */
   loadProject: (project: Project, activeId?: string) => void
@@ -100,17 +102,24 @@ export const useDoc = create<DocState>((set, get) => {
         if (s.pending.project === s.project) return { pending: null }
         return { pending: null, past: [...s.past, s.pending].slice(-HISTORY_LIMIT), future: [] }
       }),
+    // Undo and redo first close anything still open (a typing session, a
+    // slider that never heard its pointer lift), so they can never get stuck.
     undo: () =>
       set((s) => {
-        const prev = s.past[s.past.length - 1]
-        if (!prev || s.pending) return {}
-        return { ...restore(prev), past: s.past.slice(0, -1), future: [snapshot(s), ...s.future] }
+        const open = s.pending && s.pending.project !== s.project
+        const past = open ? [...s.past, s.pending!] : s.past
+        const prev = past[past.length - 1]
+        if (!prev) return s.pending ? { pending: null } : {}
+        return { ...restore(prev), pending: null, past: past.slice(0, -1), future: [snapshot(s), ...(open ? [] : s.future)] }
       }),
     redo: () =>
       set((s) => {
+        // An open change is newer than anything redo could bring back.
+        if (s.pending && s.pending.project !== s.project)
+          return { pending: null, past: [...s.past, s.pending].slice(-HISTORY_LIMIT), future: [] }
         const next = s.future[0]
-        if (!next || s.pending) return {}
-        return { ...restore(next), past: [...s.past, snapshot(s)], future: s.future.slice(1) }
+        if (!next) return s.pending ? { pending: null } : {}
+        return { ...restore(next), pending: null, past: [...s.past, snapshot(s)], future: s.future.slice(1) }
       }),
 
     select: (selectedId) => set((s) => ({ selectedId, contentEdit: selectedId === s.selectedId ? s.contentEdit : false })),
@@ -171,6 +180,17 @@ export const useDoc = create<DocState>((set, get) => {
         },
         get().selectedId === id ? { selectedId: null, contentEdit: false } : {},
       ),
+    pasteLayer: (src) => {
+      const cover = findCover(get().project, get().activeId)
+      // Same spot as the original (handy across covers), nudged while that spot is taken.
+      let { x, y } = src
+      while (cover.layers.some((l) => Math.abs(l.x - x) < 0.01 && Math.abs(l.y - y) < 0.01)) {
+        x += 5
+        y += 5
+      }
+      const copy = { ...structuredClone(src), id: uid('ly'), x, y }
+      commit((_, c) => void c.layers.push(copy), { selectedId: copy.id, contentEdit: false })
+    },
     duplicateLayer: (id) => {
       const s = get()
       const src = findCover(s.project, s.activeId).layers.find((l) => l.id === id)

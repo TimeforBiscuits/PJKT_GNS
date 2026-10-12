@@ -5,28 +5,7 @@ import { clampToFill, isFullBleed, pictureScale, pictureShift, scalePicture, shi
 import { useAssets } from '../../store/assets'
 import { activeCover, useActiveCover, useDoc } from '../../store/doc'
 import { Key, LcdField, Panel, Toggle } from '../../ui/controls'
-
-/** Range slider whose drag counts as one undo step. */
-function GestureSlider({ value, min, max, step, onChange, label }: { value: number; min: number; max: number; step: number; onChange: (v: number) => void; label: string }) {
-  const begin = useDoc((s) => s.beginGesture)
-  const end = useDoc((s) => s.endGesture)
-  return (
-    <input
-      className="slider"
-      type="range"
-      aria-label={label}
-      min={min}
-      max={max}
-      step={step}
-      value={Math.min(max, Math.max(min, value))}
-      onPointerDown={() => {
-        begin()
-        window.addEventListener('pointerup', () => end(), { once: true })
-      }}
-      onChange={(e) => onChange(Number(e.target.value))}
-    />
-  )
-}
+import { GestureSlider } from './GestureSlider'
 
 export function ImagePanel({ layer }: { layer: ImageLayer }) {
   const asset = useAssets((s) => s.assets[layer.assetId])

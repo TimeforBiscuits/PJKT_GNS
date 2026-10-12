@@ -3,10 +3,11 @@ import { useSheetLayout } from '../editor/scenes'
 import { BLEED_MM, FORMATS } from '../model/formats'
 import { useActiveCover, useDoc } from '../store/doc'
 import { useEditor, type ToolId } from '../store/editor'
+import { APPLE } from './platform'
 
 const HINTS: Record<ToolId, [string, string]> = {
   select: ['Select', 'tap to select · drag to move · full-bleed pictures drag to recompose · Space-drag or two fingers to pan'],
-  hand: ['Hand', 'drag to pan · pinch or ⌘/Ctrl-scroll to zoom'],
+  hand: ['Hand', `drag to pan · pinch or ${APPLE ? '⌘' : 'Ctrl'}-scroll to zoom`],
   rect: ['Rectangle', 'drag to draw · Shift = square · Alt/⌥ = no snapping'],
   ellipse: ['Ellipse', 'drag to draw · Shift = circle · Alt/⌥ = no snapping'],
   polygon: ['Polygon', 'drag to draw · set the number of sides in the panel'],

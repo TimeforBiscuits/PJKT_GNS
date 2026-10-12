@@ -223,6 +223,10 @@ export function Viewport({
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.button === 2) return
+    // Touching the canvas finishes typing in the inspector (iPad keeps a field
+    // focused through taps elsewhere, which also kept its undo step open).
+    const field = document.activeElement
+    if (field instanceof HTMLElement && (field.isContentEditable || field.tagName === 'INPUT' || field.tagName === 'TEXTAREA')) field.blur()
     const p = localPoint(e)
     pointers.current.set(e.pointerId, { ...p, touch: e.pointerType === 'touch' })
     ref.current!.setPointerCapture(e.pointerId)

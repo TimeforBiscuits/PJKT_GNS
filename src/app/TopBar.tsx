@@ -7,6 +7,7 @@ import { useActiveCover, useDoc } from '../store/doc'
 import { useEditor, type ViewId } from '../store/editor'
 import { Key, Led, Segmented } from '../ui/controls'
 import { IconFit, IconMinus, IconPlus, IconPrint } from '../ui/icons'
+import { MOD } from './platform'
 
 export function TopBar() {
   const formatId = useActiveCover().formatId
@@ -80,21 +81,21 @@ export function TopBar() {
       <div className="spacer" />
 
       <div className="topbar-group" role="group" aria-label="Zoom">
-        <Key square size="sm" onClick={zoomOut} aria-label="Zoom out" title="Zoom out (⌘/Ctrl −)">
+        <Key square size="sm" onClick={zoomOut} aria-label="Zoom out" title={`Zoom out (${MOD}−)`}>
           <IconMinus />
         </Key>
         <span className="lcd zoom-lcd" title="Zoom, as a percentage of real printed size">
           {pct < 10 ? pct.toFixed(1) : Math.round(pct)}
           <span className="unit">%</span>
         </span>
-        <Key square size="sm" onClick={zoomIn} aria-label="Zoom in" title="Zoom in (⌘/Ctrl +)">
+        <Key square size="sm" onClick={zoomIn} aria-label="Zoom in" title={`Zoom in (${MOD}+)`}>
           <IconPlus />
         </Key>
-        <Key size="sm" onClick={requestFit} title="Fit to screen (⌘/Ctrl 0)">
+        <Key size="sm" onClick={requestFit} title={`Fit to screen (${MOD}0)`}>
           <IconFit />
           Fit
         </Key>
-        <Key size="sm" onClick={zoomActual} title="Real size on screen (⌘/Ctrl 1)">
+        <Key size="sm" onClick={zoomActual} title={`Real size on screen (${MOD}1)`}>
           1:1
         </Key>
         <Key size="sm" onClick={() => setCalibrating(true)} title="Calibrate real size for this screen">

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { CATALOG, cssFamily, fontEntry, nearestWeight, type FontCategory } from '../../fonts/registry'
 import type { TextAlign, TextLayer } from '../../model/doc'
 import { useDoc } from '../../store/doc'
@@ -159,6 +159,18 @@ export function TextPanel({ layer }: { layer: TextLayer }) {
   const textFocused = useEditor((s) => s.textFocused)
   const editor = useRef<RichTextHandle>(null)
   const [active, setActive] = useState({ bold: false, italic: false })
+
+  // A typing session ends when another layer is picked or the panel closes:
+  // iPad never blurs a field that simply goes away, which used to leave the
+  // session open and undo switched off.
+  useLayoutEffect(
+    () => () => {
+      const box = document.activeElement
+      if (box instanceof HTMLElement && box.isContentEditable) box.blur()
+      end()
+    },
+    [layer.id, end],
+  )
 
   // Placing text (or double-tapping it) asks for the keyboard, even if this panel only just appeared.
   useEffect(() => {

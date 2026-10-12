@@ -37,6 +37,10 @@ white edge.
   session, and it stays still if the system asks for reduced motion.
 - For true 1:1 on screen, press *Cal* once per device and match a bank
   card.
+- *Undo · Redo · Copy · Paste* sit at the top of the right-hand panel. On
+  a keyboard they are ⌘Z, ⌘⇧Z, ⌘C, ⌘V on Mac and iPad (Ctrl on Windows).
+  A pasted layer keeps its size, type and formatting; pasted onto another
+  cover it lands in the same spot.
 
 ## Printing
 
@@ -93,6 +97,13 @@ white edge.
   Stampa toggles the print view)
 
 **v1.0**, October 2026.
+
+- [ ] **Requests, round 3:**
+  - [x] Undo that can't get stuck, Undo/Redo keys, ⌘ shortcuts on Apple
+  - [x] Copy and paste layers
+  - [x] Opacity slider (Effects panel); text box in LCD teal on black
+  - [ ] TOP SECRET censor stripe
+  - [ ] Effects: Ben-Day dots and Distressed
 
 ## Development
 

@@ -1,8 +1,9 @@
 import { layerLabel, type Layer } from '../../model/doc'
 import { useDoc } from '../../store/doc'
 import { Key, LcdField, Panel, Toggle } from '../../ui/controls'
+import { MOD } from '../platform'
 
-/** Position, size, rotation and opacity of the selected layer, in millimetres. */
+/** Position, size and rotation of the selected layer, in millimetres. */
 export function TransformPanel({ layer }: { layer: Layer }) {
   const update = useDoc((s) => s.updateLayer)
   const remove = useDoc((s) => s.removeLayer)
@@ -51,15 +52,6 @@ export function TransformPanel({ layer }: { layer: Layer }) {
         {!isLine && (
           <LcdField label="Rotate" unit="°" value={layer.rotation} step={1} min={-180} max={180} decimals={1} onChange={(rotation) => set({ rotation })} />
         )}
-        <LcdField
-          label="Opacity"
-          unit="%"
-          value={Math.round(layer.opacity * 100)}
-          step={5}
-          min={0}
-          max={100}
-          onChange={(o) => set({ opacity: o / 100 })}
-        />
       </div>
       <div className="grid-2">
         <Toggle on={layer.locked} onChange={(locked) => set({ locked })}>
@@ -70,13 +62,13 @@ export function TransformPanel({ layer }: { layer: Layer }) {
         </Toggle>
       </div>
       <div className="grid-4">
-        <Key size="sm" onClick={() => restack(layer.id, 'up')} title="Bring forward (⌘])">
+        <Key size="sm" onClick={() => restack(layer.id, 'up')} title={`Bring forward (${MOD}])`}>
           ▲ Fwd
         </Key>
-        <Key size="sm" onClick={() => restack(layer.id, 'down')} title="Send backward (⌘[)">
+        <Key size="sm" onClick={() => restack(layer.id, 'down')} title={`Send backward (${MOD}[)`}>
           ▼ Back
         </Key>
-        <Key size="sm" onClick={() => duplicate(layer.id)} title="Duplicate (⌘D)">
+        <Key size="sm" onClick={() => duplicate(layer.id)} title={`Duplicate (${MOD}D)`}>
           Dup
         </Key>
         <Key size="sm" onClick={() => remove(layer.id)} title="Delete (⌫)">

@@ -93,3 +93,32 @@ export const IconPrint = () => (
     <path d="M9.5 17.5 H14.5" strokeWidth={1.5} />
   </Svg>
 )
+
+export const IconUndo = () => (
+  <Svg>
+    <path d="M9 5 L4 10 L9 15" />
+    <path d="M4 10 H14 a6 6 0 0 1 0 12 H10" />
+  </Svg>
+)
+
+export const IconRedo = () => (
+  <Svg>
+    <path d="M15 5 L20 10 L15 15" />
+    <path d="M20 10 H10 a6 6 0 0 0 0 12 H14" />
+  </Svg>
+)
+
+export const IconCopy = () => (
+  <Svg>
+    <rect x="8" y="8" width="12" height="13" />
+    <path d="M5 16 H4 V3 H16 V5" />
+  </Svg>
+)
+
+export const IconPaste = () => (
+  <Svg>
+    <path d="M8 5 H5 V21 H19 V5 H16" />
+    <rect x="8" y="3" width="8" height="4" fill="currentColor" />
+    <path d="M9 12 H15 M9 16 H15" strokeWidth={1.5} />
+  </Svg>
+)

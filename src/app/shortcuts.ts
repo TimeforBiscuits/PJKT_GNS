@@ -3,15 +3,34 @@ import { zoomActual, zoomIn, zoomOut } from '../editor/camera'
 import { addImages } from '../editor/interact'
 import type { ImageLayer } from '../model/doc'
 import { selectedLayer, useDoc } from '../store/doc'
+import { CLIP_MARK, copySelection, cutSelection, pasteClipboard, useClipboard } from '../store/clipboard'
 import { useEditor } from '../store/editor'
+import { isMod } from './platform'
 import { TOOLS, pressTool } from './tools'
 
+/** Text input types, where keys (and ⌘Z) belong to the field. */
+const TEXT_TYPES = new Set(['text', 'search', 'number', 'email', 'url', 'tel', 'password'])
+
+// Only fields you type into keep the keys to themselves. A slider or a
+// checkbox that still has focus after a drag must not swallow ⌘Z.
 const typing = (t: EventTarget | null) =>
-  t instanceof HTMLElement && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)
+  t instanceof HTMLElement &&
+  ((t instanceof HTMLInputElement && TEXT_TYPES.has(t.type)) || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)
 
 /** Desktop and iPad Magic Keyboard shortcuts. */
 export function useShortcuts() {
   useEffect(() => {
+    // ⌘V pastes a copied layer unless the clipboard turns out to hold
+    // pictures copied elsewhere (the paste event, if any, follows the key).
+    let pasteTimer = 0
+    const pasteLayerSoon = () => {
+      clearTimeout(pasteTimer)
+      pasteTimer = window.setTimeout(() => {
+        pasteTimer = 0
+        if (useEditor.getState().view === 'cover') pasteClipboard()
+      }, 60)
+    }
+
     const onKey = (e: KeyboardEvent) => {
       const ed = useEditor.getState()
       const doc = useDoc.getState()
@@ -20,7 +39,7 @@ export function useShortcuts() {
         return
       }
       if (typing(e.target) || ed.calibrating) return
-      const mod = e.metaKey || e.ctrlKey
+      const mod = isMod(e)
       const sel = selectedLayer()
       const key = e.key.toLowerCase()
 
@@ -32,6 +51,13 @@ export function useShortcuts() {
         else if (key === '=' || key === '+') zoomIn()
         else if (key === '-') zoomOut()
         else if (key === 'd' && sel) doc.duplicateLayer(sel.id)
+        else if (key === 'c' && sel && ed.view === 'cover') copySelection()
+        else if (key === 'x' && sel && ed.view === 'cover') cutSelection()
+        else if (key === 'v' && useClipboard.getState().layer) {
+          // no preventDefault: the browser still raises its paste event
+          pasteLayerSoon()
+          return
+        }
         // By key position: Shift turns [ and ] into { and } on most layouts.
         else if (e.code === 'BracketRight' && sel) doc.restack(sel.id, e.shiftKey ? 'top' : 'up')
         else if (e.code === 'BracketLeft' && sel) doc.restack(sel.id, e.shiftKey ? 'bottom' : 'down')
@@ -39,6 +65,8 @@ export function useShortcuts() {
         e.preventDefault()
         return
       }
+      // Ctrl on a Mac (or ⌘ on Windows) isn't a shortcut here: don't let it pick tools.
+      if (e.metaKey || e.ctrlKey) return
 
       if (ed.view === 'cover' && sel) {
         if (e.key === 'Backspace' || e.key === 'Delete') {
@@ -86,7 +114,11 @@ export function useShortcuts() {
     const onPaste = (e: ClipboardEvent) => {
       if (typing(e.target)) return
       const files = [...(e.clipboardData?.files ?? [])].filter((f) => f.type.startsWith('image/'))
-      if (!files.length) return
+      const ours = e.clipboardData?.getData('text/plain') === CLIP_MARK
+      if (!files.length || ours) return
+      // Pictures copied elsewhere win over a layer copied here earlier.
+      clearTimeout(pasteTimer)
+      pasteTimer = 0
       e.preventDefault()
       useEditor.getState().setView('cover')
       void addImages(files)
